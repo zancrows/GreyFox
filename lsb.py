@@ -16,106 +16,121 @@ def bin_to_str(sbin:str) -> str:
 class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
-    def __init__(self):
+    def lsb_red(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
-    def lsb_red(self):
+    def lsb_green(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
-    def lsb_green(self):
+    def lsb_blue(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
-    def lsb_blue(self):
-        raise NotImplementedError
+    def action(self):
+        raise NotImplemented
 
 
 class EmbededStrategyLSB(StrategyLSB):
 
-    def __init__(self):
+    def lsb_red(self, coor:tuple) -> None:
         pass
 
-    def lsb_red(self) -> None:
+    def lsb_green(self, coor:tuple) -> None:
         pass
 
-    def lsb_green(self) -> None:
+    def lsb_blue(self, coor:tuple) -> None:
         pass
 
-    def lsb_blue(self) -> None:
+    def action(self) -> None:
         pass
 
 
 class ExtractStrategyLSB(StrategyLSB):
 
-    def __init__(self):
-        pass
+    def lsb_red(self, coor:tuple):
+        print(self.image.getpixel(coor)[0], end=", ")
 
-    def lsb_red(self):
-        pass
+    def lsb_green(self, coor:tuple):
+        print(self.image.getpixel(coor)[1], end=", ")
 
-    def lsb_green(self):
-        pass
+    def lsb_blue(self, coor:tuple):
+        print(self.image.getpixel(coor)[2])
 
-    def lsb_blue(self):
-        pass
+    def action(self):
+        print(bin_to_str())
 
 
 class DetectStrategyLSB(StrategyLSB):
 
-    def __init__(self):
+    def lsb_red(self, coor:tuple):
         pass
 
-    def lsb_red(self):
+    def lsb_green(self, coor:tuple):
         pass
 
-    def lsb_green(self):
+    def lsb_blue(self, coor:tuple):
         pass
 
-    def lsb_blue(self):
+    def action(self):
         pass
 
+class ImageLSB():
 
-class PicLSB:
-
-    def __init__(self, image, strategy_lsb=None):
+    def __init__(self, image, strategy_lsb=None, lsb_custom=None):
         self.image = image
         self.lenght, self.width = self.image.size
         self.strategy_lsb = strategy_lsb
+        self.lsb_custom = lsb_custom
 
     @property
-    def image(self):
+    def image(self) -> Image.Image:
         return self._image
 
     @image.setter
-    def image(self, image):
+    def image(self, image) -> None:
         if isinstance(image, str):
             self._image = Image.open(image)
         elif isinstance(image, Image.Image):
             self._image = image
 
-    def lsb_red(self):
+    def lsb_apply_strategy(self, *args, **kwargs):
+        if self.sb_custom:
+            self._lsb_custom_apply_strategy(*args, **kwargs)
+        else:
+            abs = range(*coor["x"]) if coor.get("x") else range(self.lenght)
+            ord = range(*coor["y"]) if coor.get("y") else range(self.width)
+            for x in abs:
+                for y in ord:
+                    self._lsb_red((x, y))
+                    self._lsb_green((x, y))
+                    self._lsb_blue((x, y))
+            self.strategy_lsb.action()
+
+
+    def _lsb_red(self, coor:tuple) -> None:
         if self.strategy_lsb is not None:
-            self.strategy_lsb.lsb_red(self)
+            self.strategy_lsb.lsb_red(self, coor)
         else:
             raise ValueError("strategy_lsb object is None")
 
-    def lsb_green(self):
+    def _lsb_green(self, coor:tuple) -> None:
         if self.strategy_lsb is not None:
-            self.strategy_lsb.lsb_green(self)
+            self.strategy_lsb.lsb_green(self, coor)
         else:
             raise ValueError("strategy_lsb object is None")
 
-    def lsb_blue(self):
+    def _lsb_blue(self, coor:tuple) -> None:
         if self.strategy_lsb is not None:
-            self.strategy_lsb.lsb_blue(self)
+            self.strategy_lsb.lsb_blue(self, coor)
         else:
             raise ValueError("strategy_lsb object is None")
 
-    def lsb_other(self):
-        raise NotImplementedError
-
+    def _lsb_custom_apply_strategy(self, *args, **kwargs):
+        self.lsb_custom(*args, **kwargs)
 
 if __name__ == "__main__":
-    pass
+    lsb = ImageLSB("ch9.png", ExtractStrategyLSB)
+    #print(lsb.image.getpixel((0,0))[0])
+    lsb.lsb_apply()
