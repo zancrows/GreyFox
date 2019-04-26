@@ -94,7 +94,7 @@ class ExtractStrategyLSB(StrategyLSB):
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
         ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[2])[-1]
 
-    def action(self):
+    def action(self) -> None:
         with open("binary.txt", "w") as fp:
             fp.write(ExtractStrategyLSB._extract)
         with open("binary", mode="bw") as fp:
@@ -114,7 +114,7 @@ class DetectStrategyLSB(StrategyLSB):
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
         pass
 
-    def action(self):
+    def action(self) -> None:
         pass
 
 class ImageLSB():
@@ -136,7 +136,7 @@ class ImageLSB():
         elif isinstance(image, Image.Image):
             self._image = image
 
-    def lsb_apply_strategy(self, *args, **kwargs):
+    def lsb_apply_strategy(self, *args, **kwargs) -> None:
         if self.lsb_custom:
             self._lsb_custom_apply_strategy(*args, **kwargs)
         else:
@@ -174,7 +174,7 @@ class ImageLSB():
         else:
             raise ValueError("strategy_lsb object is None")
 
-    def _lsb_custom_apply_strategy(self, *args, **kwargs):
+    def _lsb_custom_apply_strategy(self, *args, **kwargs) -> None:
         self.lsb_custom(*args, **kwargs)
 
 if __name__ == "__main__":
