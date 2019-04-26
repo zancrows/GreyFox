@@ -7,6 +7,12 @@ from PIL import Image
 
 __version__ = 1.0
 
+"""
+TODO:
+Revoir le décodage (bin_to_str)
+ajout de commentaire
+"""
+
 def str_to_bin(string:str) -> str:
     if string != "":
         return bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
@@ -17,6 +23,9 @@ def bin_to_str(sbin:str) -> str:
 
 def int_to_bin(integer:str) -> str:
     return f"{integer:08b}"
+
+def bin_to_int(bin:str) -> int:
+    return int(bin, 2)
 
 
 class StrategyLSB(metaclass=ABCMeta):
@@ -40,20 +49,32 @@ class StrategyLSB(metaclass=ABCMeta):
 
 class EmbededStrategyLSB(StrategyLSB):
 
+    @staticmethod
+    def _edit_pixel(image:Image, coor:tuple, bit:str, color:int) -> None:
+        pixel_to_edit = list(image.getpixel(coor))
+        color_to_edit = pixel_to_edit[color]
+        b_color = int_to_bin(color_to_edit)
+        new_color = b_color[:-1] + bit
+        pixel_to_edit[color] = bin_to_int(new_color)
+        image.putpixel(coor, tuple(pixel_to_edit))
+
     def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
         if self.msg_to_embeded == "":
             raise StopIteration
-        self.msg_to_embeded = self.msg_to_embeded[:-1]
+        EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 0)
+        self.msg_to_embeded = self.msg_to_embeded[1:]
 
     def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
         if self.msg_to_embeded == "":
             raise StopIteration
-        self.msg_to_embeded = self.msg_to_embeded[:-1]
+        EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 1)
+        self.msg_to_embeded = self.msg_to_embeded[1:]
 
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
         if self.msg_to_embeded == "":
             raise StopIteration
-        self.msg_to_embeded = self.msg_to_embeded[:-1]
+        EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 2)
+        self.msg_to_embeded = self.msg_to_embeded[1:]
 
     def action(self) -> None:
         # attention 'filename' indique le chemin  absolu dde l'image
@@ -76,7 +97,7 @@ class ExtractStrategyLSB(StrategyLSB):
     def action(self):
         with open("binary.txt", "w") as fp:
             fp.write(ExtractStrategyLSB._extract)
-        with open("binary", "bw") as fp:
+        with open("binary", mode="bw") as fp:
             fp.write(bin_to_str(ExtractStrategyLSB._extract))
         print(bin_to_str(ExtractStrategyLSB._extract))
         del(ExtractStrategyLSB._extract)
@@ -98,7 +119,7 @@ class DetectStrategyLSB(StrategyLSB):
 
 class ImageLSB():
 
-    def __init__(self, image, strategy_lsb=None, lsb_custom=None):
+    def __init__(self, image, strategy_lsb:StrategyLSB=None, lsb_custom:callable=None):
         self.image = image
         self.lenght, self.width = self.image.size
         self.strategy_lsb = strategy_lsb
@@ -157,5 +178,5 @@ class ImageLSB():
         self.lsb_custom(*args, **kwargs)
 
 if __name__ == "__main__":
-    lsb = ImageLSB("poc.png", EmbededStrategyLSB)
-    lsb.lsb_apply_strategy(msg="coucou")
+    lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
+    # lsb.lsb_apply_strategy(coor={"y": (0,1)})
