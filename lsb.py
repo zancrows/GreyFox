@@ -97,7 +97,7 @@ class ExtractStrategyLSB(StrategyLSB):
     def action(self) -> None:
         with open("binary.txt", "w") as fp:
             fp.write(ExtractStrategyLSB._extract)
-        with open("binary", mode="bw") as fp:
+        with open("binary.bin", mode="bw") as fp:
             fp.write(bin_to_str(ExtractStrategyLSB._extract))
         print(bin_to_str(ExtractStrategyLSB._extract))
         del(ExtractStrategyLSB._extract)
