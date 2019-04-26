@@ -95,7 +95,7 @@ class ExtractStrategyLSB(StrategyLSB):
         ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[2])[-1]
 
     def action(self):
-        with open("binary.txt", "w") as fp:
+        with open("binary.txt", mode="w") as fp:
             fp.write(ExtractStrategyLSB._extract)
         with open("binary", mode="bw") as fp:
             fp.write(bin_to_str(ExtractStrategyLSB._extract))
