@@ -15,11 +15,13 @@ ajout de commentaire
 
 def str_to_bin(string:str) -> str:
     if string != "":
-        return bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
+        bits = bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
+        return bits.zfill(8 * ((len(bits) + 7) // 8))
     return ""
 
 def bin_to_str(sbin:str) -> str:
-    return binascii.unhexlify(f"{int(sbin, 2):x}")
+    x = f"{int(sbin, 2):x}"
+    return binascii.unhexlify(x)
 
 def int_to_bin(integer:str) -> str:
     return f"{integer:08b}"
@@ -59,22 +61,25 @@ class EmbededStrategyLSB(StrategyLSB):
         image.putpixel(coor, tuple(pixel_to_edit))
 
     def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
-        if self.msg_to_embeded == "":
+        if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 0)
-        self.msg_to_embeded = self.msg_to_embeded[1:]
+        # self.msg_to_embeded = self.msg_to_embeded[1:]
+        self.msg_to_embeded.pop(0)
 
     def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
-        if self.msg_to_embeded == "":
+        if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 1)
-        self.msg_to_embeded = self.msg_to_embeded[1:]
+        # self.msg_to_embeded = self.msg_to_embeded[1:]
+        self.msg_to_embeded.pop(0)
 
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
-        if self.msg_to_embeded == "":
+        if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 2)
-        self.msg_to_embeded = self.msg_to_embeded[1:]
+        # self.msg_to_embeded = self.msg_to_embeded[1:]
+        self.msg_to_embeded.pop(0)
 
     def action(self) -> None:
         # attention 'filename' indique le chemin  absolu dde l'image
@@ -94,8 +99,10 @@ class ExtractStrategyLSB(StrategyLSB):
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
         ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[2])[-1]
 
-
     def action(self):
+        print("avant")
+        print(ExtractStrategyLSB._extract)
+        print("apres")
         with open("binary.txt", mode="w") as fp:
             fp.write(ExtractStrategyLSB._extract)
         with open("binary.bin", mode="bw") as fp:
@@ -144,10 +151,10 @@ class ImageLSB():
             # tricky get()
             abs = range(*kwargs["coor"]["x"]) if kwargs.get("coor", {}).get("x") else range(self.lenght)
             ord = range(*kwargs["coor"]["y"]) if kwargs.get("coor", {}).get("y") else range(self.width)
-            self.msg_to_embeded = str_to_bin(kwargs.get("msg", ""))
+            self.msg_to_embeded = list(str_to_bin(kwargs.get("msg", "")))
             try:
-                for y in ord:
-                    for x in abs:
+                for y in ordo:
+                    for x in absi:
                         self._lsb_red((x, y))
                         self._lsb_green((x, y))
                         self._lsb_blue((x, y))
@@ -179,5 +186,8 @@ class ImageLSB():
         self.lsb_custom(*args, **kwargs)
 
 if __name__ == "__main__":
+    # lsb = ImageLSB("poc.png", EmbededStrategyLSB)
+    # lsb.lsb_apply_strategy(msg="coucou")
     lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
-    # lsb.lsb_apply_strategy(coor={"y": (0,1)})
+    lsb.lsb_apply_strategy()
+
