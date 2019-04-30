@@ -64,21 +64,18 @@ class EmbededStrategyLSB(StrategyLSB):
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 0)
-        # self.msg_to_embeded = self.msg_to_embeded[1:]
         self.msg_to_embeded.pop(0)
 
     def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 1)
-        # self.msg_to_embeded = self.msg_to_embeded[1:]
         self.msg_to_embeded.pop(0)
 
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 2)
-        # self.msg_to_embeded = self.msg_to_embeded[1:]
         self.msg_to_embeded.pop(0)
 
     def action(self) -> None:
@@ -100,9 +97,6 @@ class ExtractStrategyLSB(StrategyLSB):
         ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[2])[-1]
 
     def action(self):
-        print("avant")
-        print(ExtractStrategyLSB._extract)
-        print("apres")
         with open("binary.txt", mode="w") as fp:
             fp.write(ExtractStrategyLSB._extract)
         with open("binary.bin", mode="bw") as fp:
