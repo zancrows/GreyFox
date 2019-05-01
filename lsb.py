@@ -4,14 +4,20 @@
 import binascii
 from abc import ABCMeta, abstractmethod
 from PIL import Image
+from itertools import chain, islice
 
 __version__ = 1.0
 
 """
 TODO:
-Revoir le décodage (bin_to_str)
-ajout de commentaire
+- ameliorer _edit_pixel
+- Implementation de DetectStrategyLSB
 """
+
+def iter_by_blockN(iterable, len_bloc=8, format=tuple):
+    it = iter(iterable)
+    for i in it:
+        yield format(chain(i, islice(it, len_bloc-1)))
 
 def str_to_bin(string:str) -> str:
     if string != "":
@@ -19,12 +25,14 @@ def str_to_bin(string:str) -> str:
         return bits.zfill(8 * ((len(bits) + 7) // 8))
     return ""
 
-def bin_to_str(sbin:str) -> str:
-    x = f"{int(sbin, 2):x}"
-    return binascii.unhexlify(x)
-
-def int_to_bin(integer:str) -> str:
-    return f"{integer:08b}"
+def bin_to_str(sbin:str) -> bytes:
+    b_str = b""
+    for i in iter_by_blockN(sbin):
+        binary = "".join(i)
+        integer = int(binary, 2)
+        hexa = f"{integer:02x}"
+        b_str += binascii.unhexlify(hexa)
+    return b_str
 
 def bin_to_int(bin:str) -> int:
     return int(bin, 2)
@@ -88,20 +96,19 @@ class ExtractStrategyLSB(StrategyLSB):
     _extract = ""
 
     def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
-        ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[0])[-1]
+        ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[0] & 1)
 
     def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
-        ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[1])[-1]
+        ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[1] & 1)
 
     def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
-        ExtractStrategyLSB._extract += int_to_bin(self.image.getpixel(coor)[2])[-1]
+        ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[2] & 1)
 
     def action(self):
         with open("binary.txt", mode="w") as fp:
             fp.write(ExtractStrategyLSB._extract)
         with open("binary.bin", mode="bw") as fp:
             fp.write(bin_to_str(ExtractStrategyLSB._extract))
-        print(bin_to_str(ExtractStrategyLSB._extract))
         del(ExtractStrategyLSB._extract)
 
 
@@ -143,8 +150,8 @@ class ImageLSB():
             self._lsb_custom_apply_strategy(*args, **kwargs)
         else:
             # tricky get()
-            abs = range(*kwargs["coor"]["x"]) if kwargs.get("coor", {}).get("x") else range(self.lenght)
-            ord = range(*kwargs["coor"]["y"]) if kwargs.get("coor", {}).get("y") else range(self.width)
+            absi = range(*kwargs["coor"]["x"]) if kwargs.get("coor", {}).get("x") else range(self.lenght)
+            ordo = range(*kwargs["coor"]["y"]) if kwargs.get("coor", {}).get("y") else range(self.width)
             self.msg_to_embeded = list(str_to_bin(kwargs.get("msg", "")))
             try:
                 for y in ordo:
@@ -184,4 +191,3 @@ if __name__ == "__main__":
     # lsb.lsb_apply_strategy(msg="coucou")
     lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
     lsb.lsb_apply_strategy()
-
