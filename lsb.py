@@ -10,7 +10,6 @@ __version__ = 1.0
 
 """
 TODO:
-- ameliorer _edit_pixel
 - Implementation de DetectStrategyLSB
 """
 
@@ -20,7 +19,7 @@ def iter_by_blockN(iterable, len_bloc=8, format=tuple):
         yield format(chain(i, islice(it, len_bloc-1)))
 
 def str_to_bin(string:str) -> str:
-    if string != "":
+    if string:
         bits = bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
         return bits.zfill(8 * ((len(bits) + 7) // 8))
     return ""
@@ -33,9 +32,6 @@ def bin_to_str(sbin:str) -> bytes:
         hexa = f"{integer:02x}"
         b_str += binascii.unhexlify(hexa)
     return b_str
-
-def bin_to_int(bin:str) -> int:
-    return int(bin, 2)
 
 
 class StrategyLSB(metaclass=ABCMeta):
@@ -63,9 +59,7 @@ class EmbededStrategyLSB(StrategyLSB):
     def _edit_pixel(image:Image, coor:tuple, bit:str, color:int) -> None:
         pixel_to_edit = list(image.getpixel(coor))
         color_to_edit = pixel_to_edit[color]
-        b_color = int_to_bin(color_to_edit)
-        new_color = b_color[:-1] + bit
-        pixel_to_edit[color] = bin_to_int(new_color)
+        pixel_to_edit[color] = ((color_to_edit >> 1) << 1) | int(bit)
         image.putpixel(coor, tuple(pixel_to_edit))
 
     def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
@@ -188,6 +182,6 @@ class ImageLSB():
 
 if __name__ == "__main__":
     # lsb = ImageLSB("poc.png", EmbededStrategyLSB)
-    # lsb.lsb_apply_strategy(msg="coucou")
+    # lsb.lsb_apply_strategy(msg="salut ca va ?")
     lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
     lsb.lsb_apply_strategy()
