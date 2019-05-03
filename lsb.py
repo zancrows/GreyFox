@@ -139,49 +139,47 @@ class ImageLSB():
         elif isinstance(image, Image.Image):
             self._image = image
 
-    def lsb_apply_strategy(self, coor={}, msg=None) -> None:
-        self.absi = range(*coor["x"]) if coor.get("x") else range(self.lenght)
-        self.ordo = range(*coor["y"]) if coor.get("y") else range(self.width)
+    def lsb_apply_strategy(self, coor:dict={}, msg:str="") -> None:
+        absi = range(*coor["x"]) if coor.get("x") else range(self.lenght)
+        ordo = range(*coor["y"]) if coor.get("y") else range(self.width)
         self.msg_to_embeded = list(str_to_bin(msg)) if msg else msg
         try:
             if self.lsb_custom:
-                self._lsb_custom_apply_strategy()
+                self._lsb_custom_apply_strategy(absi, ordo)
             else:
-                for y in self.ordo:
-                    for x in self.absi:
-                        self._lsb_red((x, y))
-                        self._lsb_green((x, y))
-                        self._lsb_blue((x, y))
+                for y in ordo:
+                    for x in absi:
+                        self.lsb_red((x, y))
+                        self.lsb_green((x, y))
+                        self.lsb_blue((x, y))
         except StopIteration:
             print(f"embeded end -> {msg}")
             self.strategy_lsb.action(self)
         else:
             self.strategy_lsb.action(self)
         finally:
-            del(self.absi)
-            del(self.ordo)
             del(self.msg_to_embeded)
 
-    def _lsb_red(self, coor:tuple) -> None:
-        if self.strategy_lsb is not None:
+    def lsb_red(self, coor:tuple) -> None:
+        if issubclass(self.strategy_lsb, StrategyLSB):
             self.strategy_lsb.lsb_red(self, coor)
         else:
-            raise ValueError("strategy_lsb object is None")
+            raise ValueError("self.strategy_lsb is not subclass of StrategyLSB")
 
-    def _lsb_green(self, coor:tuple) -> None:
-        if self.strategy_lsb is not None:
+    def lsb_green(self, coor:tuple) -> None:
+        if issubclass(self.strategy_lsb, StrategyLSB):
             self.strategy_lsb.lsb_green(self, coor)
         else:
-            raise ValueError("strategy_lsb object is None")
+            raise ValueError("self.strategy_lsb is not subclass of StrategyLSB")
 
-    def _lsb_blue(self, coor:tuple) -> None:
-        if self.strategy_lsb is not None:
+    def lsb_blue(self, coor:tuple) -> None:
+        if issubclass(self.strategy_lsb, StrategyLSB):
             self.strategy_lsb.lsb_blue(self, coor)
         else:
-            raise ValueError("strategy_lsb object is None")
+            raise ValueError("self.strategy_lsb is not subclass of StrategyLSB")
 
-    def _lsb_custom_apply_strategy(self) -> None:
-        self.lsb_custom(self)
+    def _lsb_custom_apply_strategy(self, absi, ordo) -> None:
+        self.lsb_custom(self, absi, ordo)
 
 
 if __name__ == "__main__":
