@@ -37,15 +37,15 @@ def bin_to_str(sbin:str) -> bytes:
 class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
-    def lsb_red(self, coor:tuple, *args, **kwargs):
+    def lsb_red(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
-    def lsb_green(self, coor:tuple, *args, **kwargs):
+    def lsb_green(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
-    def lsb_blue(self, coor:tuple, *args, **kwargs):
+    def lsb_blue(self, coor:tuple):
         raise NotImplementedError
 
     @abstractmethod
@@ -62,19 +62,19 @@ class EmbededStrategyLSB(StrategyLSB):
         pixel_to_edit[color] = ((color_to_edit >> 1) << 1) | int(bit)
         image.putpixel(coor, tuple(pixel_to_edit))
 
-    def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_red(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 0)
         self.msg_to_embeded.pop(0)
 
-    def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_green(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 1)
         self.msg_to_embeded.pop(0)
 
-    def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_blue(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 2)
@@ -83,19 +83,18 @@ class EmbededStrategyLSB(StrategyLSB):
     def action(self) -> None:
         # attention 'filename' indique le chemin  absolu dde l'image
         self.image.save(f"lsb_{self.image.filename}")
-        del(self.msg_to_embeded)
 
 
 class ExtractStrategyLSB(StrategyLSB):
     _extract = ""
 
-    def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_red(self, coor:tuple) -> None:
         ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[0] & 1)
 
-    def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_green(self, coor:tuple) -> None:
         ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[1] & 1)
 
-    def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_blue(self, coor:tuple) -> None:
         ExtractStrategyLSB._extract += str(self.image.getpixel(coor)[2] & 1)
 
     def action(self):
@@ -108,17 +107,18 @@ class ExtractStrategyLSB(StrategyLSB):
 
 class DetectStrategyLSB(StrategyLSB):
 
-    def lsb_red(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_red(self, coor:tuple) -> None:
         pass
 
-    def lsb_green(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_green(self, coor:tuple) -> None:
         pass
 
-    def lsb_blue(self, coor:tuple, *args, **kwargs) -> None:
+    def lsb_blue(self, coor:tuple) -> None:
         pass
 
     def action(self) -> None:
         pass
+
 
 class ImageLSB():
 
@@ -139,25 +139,28 @@ class ImageLSB():
         elif isinstance(image, Image.Image):
             self._image = image
 
-    def lsb_apply_strategy(self, *args, **kwargs) -> None:
-        if self.lsb_custom:
-            self._lsb_custom_apply_strategy(*args, **kwargs)
-        else:
-            # tricky get()
-            absi = range(*kwargs["coor"]["x"]) if kwargs.get("coor", {}).get("x") else range(self.lenght)
-            ordo = range(*kwargs["coor"]["y"]) if kwargs.get("coor", {}).get("y") else range(self.width)
-            self.msg_to_embeded = list(str_to_bin(kwargs.get("msg", "")))
-            try:
-                for y in ordo:
-                    for x in absi:
+    def lsb_apply_strategy(self, coor={}, msg=None) -> None:
+        self.absi = range(*coor["x"]) if coor.get("x") else range(self.lenght)
+        self.ordo = range(*coor["y"]) if coor.get("y") else range(self.width)
+        self.msg_to_embeded = list(str_to_bin(msg)) if msg else msg
+        try:
+            if self.lsb_custom:
+                self._lsb_custom_apply_strategy()
+            else:
+                for y in self.ordo:
+                    for x in self.absi:
                         self._lsb_red((x, y))
                         self._lsb_green((x, y))
                         self._lsb_blue((x, y))
-            except StopIteration:
-                print(f"embeded end -> {kwargs['msg']}")
-                self.strategy_lsb.action(self)
-            else:
-                self.strategy_lsb.action(self)
+        except StopIteration:
+            print(f"embeded end -> {msg}")
+            self.strategy_lsb.action(self)
+        else:
+            self.strategy_lsb.action(self)
+        finally:
+            del(self.absi)
+            del(self.ordo)
+            del(self.msg_to_embeded)
 
     def _lsb_red(self, coor:tuple) -> None:
         if self.strategy_lsb is not None:
@@ -177,11 +180,12 @@ class ImageLSB():
         else:
             raise ValueError("strategy_lsb object is None")
 
-    def _lsb_custom_apply_strategy(self, *args, **kwargs) -> None:
-        self.lsb_custom(*args, **kwargs)
+    def _lsb_custom_apply_strategy(self) -> None:
+        self.lsb_custom(self)
+
 
 if __name__ == "__main__":
-    # lsb = ImageLSB("poc.png", EmbededStrategyLSB)
-    # lsb.lsb_apply_strategy(msg="salut ca va ?")
     lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
     lsb.lsb_apply_strategy()
+    # lsb = ImageLSB("poc.png", EmbededStrategyLSB)
+    # lsb.lsb_apply_strategy(msg="aurevoir")
