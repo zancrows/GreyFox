@@ -50,7 +50,7 @@ class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
     def action(self):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class EmbededStrategyLSB(StrategyLSB):
@@ -64,25 +64,27 @@ class EmbededStrategyLSB(StrategyLSB):
 
     def lsb_red(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
+            print(coor)
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 0)
         self.msg_to_embeded.pop(0)
 
     def lsb_green(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
+            print(coor)
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 1)
         self.msg_to_embeded.pop(0)
 
     def lsb_blue(self, coor:tuple) -> None:
         if not self.msg_to_embeded:
+            print(coor)
             raise StopIteration
         EmbededStrategyLSB._edit_pixel(self.image, coor, self.msg_to_embeded[0], 2)
         self.msg_to_embeded.pop(0)
 
     def action(self) -> None:
-        # attention 'filename' indique le chemin  absolu dde l'image
-        self.image.save(f"lsb_{self.image.filename}")
+        self.image.save(f"{self.file_name}")
 
 
 class ExtractStrategyLSB(StrategyLSB):
@@ -122,11 +124,13 @@ class DetectStrategyLSB(StrategyLSB):
 
 class ImageLSB():
 
-    def __init__(self, image, strategy_lsb:StrategyLSB=None, lsb_custom:callable=None):
+    def __init__(self, image, strategy_lsb:StrategyLSB=None, lsb_custom:callable=None, new_name:str=""):
         self.image = image
         self.lenght, self.width = self.image.size
         self.strategy_lsb = strategy_lsb
         self.lsb_custom = lsb_custom
+        # attention 'filename' indique le chemin  absolu de l'image
+        self.file_name = new_name if new_name else self.image.filename
 
     @property
     def image(self) -> Image.Image:
@@ -139,7 +143,7 @@ class ImageLSB():
         elif isinstance(image, Image.Image):
             self._image = image
 
-    def lsb_apply_strategy(self, coor:dict={}, msg:str="") -> None:
+    def lsb_apply_strategy(self, coor:dict={}, msg:str="", new_name:str="") -> None:
         absi = range(*coor["x"]) if coor.get("x") else range(self.lenght)
         ordo = range(*coor["y"]) if coor.get("y") else range(self.width)
         self.msg_to_embeded = list(str_to_bin(msg)) if msg else msg
@@ -181,9 +185,3 @@ class ImageLSB():
     def _lsb_custom_apply_strategy(self, absi, ordo) -> None:
         self.lsb_custom(self, absi, ordo)
 
-
-if __name__ == "__main__":
-    lsb = ImageLSB("lsb_poc.png", ExtractStrategyLSB)
-    lsb.lsb_apply_strategy()
-    # lsb = ImageLSB("poc.png", EmbededStrategyLSB)
-    # lsb.lsb_apply_strategy(msg="aurevoir")
