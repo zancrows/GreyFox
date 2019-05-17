@@ -126,7 +126,7 @@ class ImageLSB():
 
     def __init__(self, image, strategy_lsb:StrategyLSB=None, lsb_custom:callable=None, new_name:str=""):
         self.image = image
-        self.lenght, self.width = self.image.size
+        self.width, self.height = self.image.size
         self.strategy_lsb = strategy_lsb
         self.lsb_custom = lsb_custom
         # attention 'filename' indique le chemin  absolu de l'image
@@ -144,8 +144,8 @@ class ImageLSB():
             self._image = image
 
     def lsb_apply_strategy(self, coor:dict={}, msg:str="", new_name:str="") -> None:
-        absi = range(*coor["x"]) if coor.get("x") else range(self.lenght)
-        ordo = range(*coor["y"]) if coor.get("y") else range(self.width)
+        absi = range(*coor["x"]) if coor.get("x") else range(self.width)
+        ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
         self.msg_to_embeded = list(str_to_bin(msg)) if msg else msg
         try:
             if self.lsb_custom:
@@ -184,4 +184,3 @@ class ImageLSB():
 
     def _lsb_custom_apply_strategy(self, absi, ordo) -> None:
         self.lsb_custom(self, absi, ordo)
-
