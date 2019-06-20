@@ -184,3 +184,7 @@ class ImageLSB():
 
     def _lsb_custom_apply_strategy(self, absi, ordo) -> None:
         self.lsb_custom(self, absi, ordo)
+
+
+def foo():
+    pass
