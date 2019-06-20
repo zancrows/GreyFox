@@ -1,11 +1,13 @@
 # coding: utf-8
-# python 3.7.1 x86_64
+# python 3.7.3 x86_64
 
 import binascii
-from abc import ABCMeta, abstractmethod
 from PIL import Image
-from itertools import chain, islice, count
 from enum import IntEnum
+from datetime import datetime
+from itertools import chain, islice, count
+from abc import ABCMeta, abstractmethod
+
 
 def iter_by_blockN(iterable, len_bloc=8, format=tuple):
     it = iter(iterable)
@@ -31,22 +33,38 @@ def bin_to_str(sbin:str) -> bytes:
 class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
-    def action(self):
+    def action(self, absi, ordo):
         raise NotImplementedError
+
+    @classmethod
+    def get_pixel(cls, img, absi, ordo):
+        for y in ordo:
+            for x in absi:
+                yield img.getpixel((x, y))
+
 
 class EmbededStrategyLSB(StrategyLSB):
 
-    def action(self) -> None:
+    def action(self, absi, ordo) -> None:
         raise NotImplementedError
+
 
 class ExtractStrategyLSB(StrategyLSB):
 
-    def action(self) -> None:
-        raise NotImplementedError
+    def action(self, absi, ordo) -> None:
+        # TODO être capable de donner une sequece des bit qu'on veut extraire
+        _extract = ""
+        # TODO ajout de log
+        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+            for color in self.colors:
+                _extract += str(pixel[color] & 1)
+        # TODO ecriture dans fichier
+
+
 
 class DetectStrategyLSB(StrategyLSB):
 
-    def action(self) -> None:
+    def action(self, absi, ordo) -> None:
         raise NotImplementedError
 
 
@@ -58,7 +76,6 @@ class ImageLSB():
         self.strategy_lsb = strategy_lsb
         # attention 'filename' indique le chemin  absolu de l'image
         self.file_name = self.image.filename
-        self.colors = self.color_sequence
 
     @property
     def image(self) -> Image.Image:
@@ -74,24 +91,25 @@ class ImageLSB():
     @property
     def color_sequence(self):
         colors = ["RED", "GREEN", "BLUE"]
-        if len(self.image.getpixel((0, 0))) > len(colors):
+        if len(self.image.getpixel((0, 0))) == 4:
             colors.append("ALPHA")
         return IntEnum("Color", zip(colors, count()))
 
 
-    def lsb_apply_strategy(self, coor:dict={}, msg:str="", new_name:str="") -> None:
+    def apply_strategy(self, coor:dict={}) -> None:
+        # TODO add params_strategy -> dict() pour configurer les strategies
         absi = range(*coor["x"]) if coor.get("x") else range(self.width)
         ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
-        self.msg_to_embeded = list(str_to_bin(msg)) if msg else msg
-        print("[+] Start ")
+        # TODO ajout de modification de sequence, voir modification de l'initialisation de color_sequence
+        colors = self.color_sequence
+        print(self.strategy_lsb)
         if issubclass(self.strategy_lsb, StrategyLSB):
-            self.strategy_lsb.action(self)
+            print(f"[+] Start apply strategy with {self.strategy_lsb.__name__}")
+            self.strategy_lsb.action(self, absi, ordo, colors)
+            print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
         else:
-            raise ValueError("self.strategy_lsb is not subclass of StrategyLSB")
-
+            raise TypeError("[!] self.strategy_lsb is not subclass of StrategyLSB")
 
 if __name__ == "__main__":
-    img = ImageLSB("ch9.png")
-    print(img.image.mode)
-    for i in img.colors:
-        print(i)
+    img = ImageLSB("test.png", ExtractStrategyLSB)
+    img.apply_strategy()
