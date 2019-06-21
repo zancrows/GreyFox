@@ -34,7 +34,7 @@ class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
     def action(self, absi, ordo):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @classmethod
     def get_pixel(cls, img, absi, ordo):
@@ -46,26 +46,32 @@ class StrategyLSB(metaclass=ABCMeta):
 class EmbededStrategyLSB(StrategyLSB):
 
     def action(self, absi, ordo) -> None:
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class ExtractStrategyLSB(StrategyLSB):
 
-    def action(self, absi, ordo) -> None:
-        # TODO être capable de donner une sequece des bit qu'on veut extraire
+    def action(self, absi, ordo, colors) -> None:
+        # TODO être capable de donner une sequence des bit qu'on veut extraire
         _extract = ""
-        # TODO ajout de log
+        print("[+] Start Extract with color sequence ...")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            for color in self.colors:
+            for color in colors:
                 _extract += str(pixel[color] & 1)
-        # TODO ecriture dans fichier
 
+        print("[+] End Extract")
+        with open("binary.txt", mode="w") as fp:
+            print("[+] binary.txt write")
+            fp.write(_extract)
+        with open("binary.bin", mode="bw") as fp:
+            print("[+] binary.bin write")
+            fp.write(bin_to_str(_extract))
 
 
 class DetectStrategyLSB(StrategyLSB):
 
     def action(self, absi, ordo) -> None:
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class ImageLSB():
@@ -96,16 +102,19 @@ class ImageLSB():
         return IntEnum("Color", zip(colors, count()))
 
 
-    def apply_strategy(self, coor:dict={}) -> None:
+    def apply_strategy(self, coor:dict={}, params_strategy:dict={}) -> None:
         # TODO add params_strategy -> dict() pour configurer les strategies
         absi = range(*coor["x"]) if coor.get("x") else range(self.width)
         ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
         # TODO ajout de modification de sequence, voir modification de l'initialisation de color_sequence
         colors = self.color_sequence
-        print(self.strategy_lsb)
+
         if issubclass(self.strategy_lsb, StrategyLSB):
             print(f"[+] Start apply strategy with {self.strategy_lsb.__name__}")
+            start = datetime.now()
             self.strategy_lsb.action(self, absi, ordo, colors)
+            end = datetime.now()
+            print(f"[+] time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
         else:
             raise TypeError("[!] self.strategy_lsb is not subclass of StrategyLSB")
