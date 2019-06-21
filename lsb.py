@@ -56,7 +56,7 @@ class ExtractStrategyLSB(StrategyLSB):
         _extract = ""
         print("[+] Start Extract with color sequence ...")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            for color in colors:
+            for color in colors.values():
                 _extract += str(pixel[color] & 1)
 
         print("[+] End Extract")
@@ -96,11 +96,10 @@ class ImageLSB():
 
     @property
     def color_sequence(self):
-        colors = ["RED", "GREEN", "BLUE"]
-        if len(self.image.getpixel((0, 0))) == 4:
-            colors.append("ALPHA")
-        return IntEnum("Color", zip(colors, count()))
-
+        colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
+        if len(self.image.getpixel((0,0))) == 4:
+            colors["ALPHA"] = 3
+        return  colors
 
     def apply_strategy(self, coor:dict={}, params_strategy:dict={}) -> None:
         # TODO add params_strategy -> dict() pour configurer les strategies
