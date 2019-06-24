@@ -3,9 +3,8 @@
 
 import binascii
 from PIL import Image
-from enum import IntEnum
 from datetime import datetime
-from itertools import chain, islice, count
+from itertools import chain, islice
 from abc import ABCMeta, abstractmethod
 
 
@@ -33,11 +32,11 @@ def bin_to_str(sbin:str) -> bytes:
 class StrategyLSB(metaclass=ABCMeta):
 
     @abstractmethod
-    def action(self, absi, ordo):
+    def action(self, absi, ordo, colors):
         raise NotImplementedError()
 
     @classmethod
-    def get_pixel(cls, img, absi, ordo):
+    def get_pixel(cls, img, absi:int, ordo:int):
         for y in ordo:
             for x in absi:
                 yield img.getpixel((x, y))
@@ -45,32 +44,33 @@ class StrategyLSB(metaclass=ABCMeta):
 
 class EmbededStrategyLSB(StrategyLSB):
 
-    def action(self, absi, ordo) -> None:
+    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         raise NotImplementedError()
 
 
 class ExtractStrategyLSB(StrategyLSB):
 
-    def action(self, absi, ordo, colors) -> None:
+    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         # TODO être capable de donner une sequence des bit qu'on veut extraire
-        _extract = ""
-        print("[+] Start Extract with color sequence ...")
+        extract = ""
+        repr_colors = " ".join(colors.keys())
+        print(f"[+] Start Extract with color sequence -> {repr_colors}")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for color in colors.values():
-                _extract += str(pixel[color] & 1)
+                extract += str(pixel[color] & 1)
 
         print("[+] End Extract")
         with open("binary.txt", mode="w") as fp:
             print("[+] binary.txt write")
-            fp.write(_extract)
+            fp.write(extract)
         with open("binary.bin", mode="bw") as fp:
             print("[+] binary.bin write")
-            fp.write(bin_to_str(_extract))
+            fp.write(bin_to_str(extract))
 
 
 class DetectStrategyLSB(StrategyLSB):
 
-    def action(self, absi, ordo) -> None:
+    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         raise NotImplementedError()
 
 
@@ -94,24 +94,23 @@ class ImageLSB():
         elif isinstance(image, Image.Image):
             self._image = image
 
-    @property
-    def color_sequence(self):
-        colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
+    def color_sequence(self, custom:tuple=None):
+        _colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
         if len(self.image.getpixel((0,0))) == 4:
-            colors["ALPHA"] = 3
-        return  colors
+            _colors["ALPHA"] = 3
+        if custom:
+            _colors = {c: _colors[c] for c in custom}
+        return  _colors
 
-    def apply_strategy(self, coor:dict={}, params_strategy:dict={}) -> None:
-        # TODO add params_strategy -> dict() pour configurer les strategies
+    def apply_strategy(self, coor:dict={}, color_seq:tuple=None, params_strategy:dict={}) -> None:
         absi = range(*coor["x"]) if coor.get("x") else range(self.width)
         ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
-        # TODO ajout de modification de sequence, voir modification de l'initialisation de color_sequence
-        colors = self.color_sequence
+        colors = self.color_sequence(color_seq)
 
         if issubclass(self.strategy_lsb, StrategyLSB):
             print(f"[+] Start apply strategy with {self.strategy_lsb.__name__}")
             start = datetime.now()
-            self.strategy_lsb.action(self, absi, ordo, colors)
+            self.strategy_lsb.action(self, absi, ordo, colors, params_strategy)
             end = datetime.now()
             print(f"[+] time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
@@ -120,4 +119,5 @@ class ImageLSB():
 
 if __name__ == "__main__":
     img = ImageLSB("test.png", ExtractStrategyLSB)
-    img.apply_strategy()
+    c = {"GREEN"}
+    img.apply_strategy(color_seq=c)
