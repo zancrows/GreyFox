@@ -28,11 +28,12 @@ def bin_to_str(sbin:str) -> bytes:
         b_str += binascii.unhexlify(hexa)
     return b_str
 
-def extract_bit(byte:int, mask:tuple) -> str:
+def extract_bit(byte:int, mask:tuple=(0,)) -> str:
     b = ""
     for i in mask:
         b += str((byte >> i) & 1)
     return b
+
 
 class StrategyLSB(metaclass=ABCMeta):
 
@@ -56,9 +57,6 @@ class EmbededStrategyLSB(StrategyLSB):
 class ExtractStrategyLSB(StrategyLSB):
 
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
-        # TODO être capable de donner une sequence des bit qu'on veut extraire
-        # example les 3 bits de poids faible
-        # params_strategy["bits"] -> un int
         extract = ""
         repr_colors = " ".join(colors.keys())
         mask = params_strategy.get("bit_mask", (0,))
