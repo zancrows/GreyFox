@@ -28,6 +28,11 @@ def bin_to_str(sbin:str) -> bytes:
         b_str += binascii.unhexlify(hexa)
     return b_str
 
+def extract_bit(byte:int, mask:tuple) -> str:
+    b = ""
+    for i in mask:
+        b += str((byte >> i) & 1)
+    return b
 
 class StrategyLSB(metaclass=ABCMeta):
 
@@ -52,12 +57,15 @@ class ExtractStrategyLSB(StrategyLSB):
 
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         # TODO être capable de donner une sequence des bit qu'on veut extraire
+        # example les 3 bits de poids faible
+        # params_strategy["bits"] -> un int
         extract = ""
         repr_colors = " ".join(colors.keys())
+        mask = params_strategy.get("bit_mask", (0,))
         print(f"[+] Start Extract with color sequence -> {repr_colors}")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for color in colors.values():
-                extract += str(pixel[color] & 1)
+                extract += extract_bit(pixel[color], mask)
 
         print("[+] End Extract")
         with open("binary.txt", mode="w") as fp:
@@ -119,5 +127,6 @@ class ImageLSB():
 
 if __name__ == "__main__":
     img = ImageLSB("test.png", ExtractStrategyLSB)
-    c = {"GREEN"}
-    img.apply_strategy(color_seq=c)
+    c = ("GREEN",)
+    p = {"bit_mask": (1,0)}
+    img.apply_strategy(color_seq=c, params_strategy=p)
