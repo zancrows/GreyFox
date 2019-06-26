@@ -7,6 +7,7 @@ from datetime import datetime
 from itertools import chain, islice
 from abc import ABCMeta, abstractmethod
 
+############################## functions #######################################
 
 def iter_by_blockN(iterable, len_bloc=8, format=tuple):
     it = iter(iterable)
@@ -34,6 +35,7 @@ def extract_bit(byte:int, mask:tuple=(0,)) -> str:
         b += str((byte >> i) & 1)
     return b
 
+############################## class ###########################################
 
 class StrategyLSB(metaclass=ABCMeta):
 
@@ -45,27 +47,53 @@ class StrategyLSB(metaclass=ABCMeta):
     def get_pixel(cls, img, absi:int, ordo:int):
         for y in ordo:
             for x in absi:
-                yield img.getpixel((x, y))
+                yield (x, y), img.getpixel((x, y)),
 
 
 class EmbededStrategyLSB(StrategyLSB):
 
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
-        raise NotImplementedError()
+        data_to_embeded = params_strategy.get("data_to_embeded")
+        file_name_ = params_strategy.get('file_name', self.file_name)
+        file_name = f"hidden_{file_name_}"
+
+        if not data_to_embeded:
+            err_msg
+            print(err_msg)
+            raise ValueError(f"{err_msg}, data_to_embeded -> "
+                f"type: {type(data_to_embeded)}, value: {data_to_embeded}")
+
+        bits = list(str_to_bin(data_to_embeded))
+        print(f"DEBUG -> {bits}")
+        # TODO print mask/params
+        print(f"[+] data to embeded -> {data_to_embeded}")
+        for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+            new_pixel = list(pixel)
+            for k_color, v_color in colors.items():
+                if not bits:
+                    continue
+                new_pixel[v_color] = (pixel[v_color] >> 1) << 1 | int(bits[0])
+                bits.pop(0)
+            self.image.putpixel(coor, tuple(new_pixel))
+            if not bits:
+                print(f"[+] end embeded here {coor}")
+                break
+
+        print(f"[+] save file with hidden data -> {file_name}")
+        self.image.save(file_name)
 
 
 class ExtractStrategyLSB(StrategyLSB):
 
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
-        repr_colors = " ".join(colors.keys())
         mask = params_strategy.get("bit_mask", {})
-        print(f"[+] Start Extract with color sequence -> {repr_colors}")
-        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+
+        # TODO print mask/params
+        for _, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 extract += extract_bit(pixel[v_color], mask.get(k_color, (0,)))
 
-        print("[+] End Extract")
         with open("binary.txt", mode="w") as fp:
             print("[+] binary.txt write")
             fp.write(extract)
@@ -86,7 +114,7 @@ class ImageLSB():
         self.image = image
         self.width, self.height = self.image.size
         self.strategy_lsb = strategy_lsb
-        # attention 'filename' indique le chemin  absolu de l'image
+        # /!\ attention 'filename' indique le chemin  absolu de l'image /!\
         self.file_name = self.image.filename
 
     @property
@@ -99,6 +127,10 @@ class ImageLSB():
             self._image = Image.open(image)
         elif isinstance(image, Image.Image):
             self._image = image
+        else:
+            err_msg = "[!] image is not a str or PIL.Image instance"
+            print(err_msg)
+            raise TypeError(f"{err_msg}, image -> {type(image)}, {image}")
 
     def color_sequence(self, custom:tuple=None):
         _colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
@@ -112,25 +144,33 @@ class ImageLSB():
         absi = range(*coor["x"]) if coor.get("x") else range(self.width)
         ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
         colors = self.color_sequence(color_seq)
+        repr_colors = " ".join(colors.keys())
 
-        if issubclass(self.strategy_lsb, StrategyLSB):
+        if not isinstance(self.strategy_lsb, type):
+            err_msg = "[!] self.strategy_lsb is not class (instance of type)"
+            print(err_msg)
+            raise TypeError(f"{err_msg}, strategy_lsb -> "
+            f"type: {type(self.strategy_lsb)}, value: {self.strategy_lsb}")
+        if not issubclass(self.strategy_lsb, StrategyLSB):
+            err_msg = "[!] self.strategy_lsb is not subclass of StrategyLSB"
+            print(err_msg)
+            raise TypeError(f"{err_msg}, strategy_lsb -> "
+            f"type: {type(self.strategy_lsb)}, value: {self.strategy_lsb}")
+        else:
             print(f"[+] Start apply strategy with {self.strategy_lsb.__name__}")
+            print(f"[+] color sequence -> {repr_colors}")
             start = datetime.now()
             self.strategy_lsb.action(self, absi, ordo, colors, params_strategy)
             end = datetime.now()
             print(f"[+] time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
-        else:
-            raise TypeError("[!] self.strategy_lsb is not subclass of StrategyLSB")
 
 if __name__ == "__main__":
-    img = ImageLSB("test.png", ExtractStrategyLSB)
+    img = ImageLSB("test.png", EmbededStrategyLSB)
     # c = ("GREEN", "RED")
-    # p = {"bit_mask": {
-    #     "RED": (7,6),
-    #     "GREEN":(5,4),
-    #     "BLUE": (4,)
-    # }}
+    p = {"data_to_embeded": "bonjour"}
     # img.apply_strategy(color_seq=c, params_strategy=p)
+    # img.apply_strategy()
     # img.apply_strategy(params_strategy=p)
-    img.apply_strategy()
+    himg = ImageLSB("hidden_test.png", ExtractStrategyLSB)
+    himg.apply_strategy()
