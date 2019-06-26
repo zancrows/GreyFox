@@ -47,7 +47,7 @@ class StrategyLSB(metaclass=ABCMeta):
     def get_pixel(cls, img, absi:int, ordo:int):
         for y in ordo:
             for x in absi:
-                yield (x, y), img.getpixel((x, y)),
+                yield (x, y), img.getpixel((x, y))
 
 
 class EmbededStrategyLSB(StrategyLSB):
@@ -64,13 +64,13 @@ class EmbededStrategyLSB(StrategyLSB):
                 f"type: {type(data_to_embeded)}, value: {data_to_embeded}")
 
         bits = list(str_to_bin(data_to_embeded))
-        print(f"DEBUG -> {bits}")
         # TODO print mask/params
         print(f"[+] data to embeded -> {data_to_embeded}")
         for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             new_pixel = list(pixel)
             for k_color, v_color in colors.items():
                 if bits:
+                    # TODO appliquer un mask comme dans ExtractStrategyLSB
                     new_pixel[v_color] = (pixel[v_color] >> 1) << 1 | int(bits[0])
                     bits.pop(0)
             self.image.putpixel(coor, tuple(new_pixel))
