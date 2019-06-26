@@ -59,11 +59,11 @@ class ExtractStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
         repr_colors = " ".join(colors.keys())
-        mask = params_strategy.get("bit_mask", (0,))
+        mask = params_strategy.get("bit_mask", {})
         print(f"[+] Start Extract with color sequence -> {repr_colors}")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            for color in colors.values():
-                extract += extract_bit(pixel[color], mask)
+            for k_color, v_color in colors.items():
+                extract += extract_bit(pixel[v_color], mask.get(k_color, (0,)))
 
         print("[+] End Extract")
         with open("binary.txt", mode="w") as fp:
@@ -125,6 +125,12 @@ class ImageLSB():
 
 if __name__ == "__main__":
     img = ImageLSB("test.png", ExtractStrategyLSB)
-    c = ("GREEN",)
-    p = {"bit_mask": (1,0)}
-    img.apply_strategy(color_seq=c, params_strategy=p)
+    # c = ("GREEN", "RED")
+    # p = {"bit_mask": {
+    #     "RED": (7,6),
+    #     "GREEN":(5,4),
+    #     "BLUE": (4,)
+    # }}
+    # img.apply_strategy(color_seq=c, params_strategy=p)
+    # img.apply_strategy(params_strategy=p)
+    img.apply_strategy()
