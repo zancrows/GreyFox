@@ -58,7 +58,7 @@ class EmbededStrategyLSB(StrategyLSB):
         file_name = f"hidden_{file_name_}"
 
         if not data_to_embeded:
-            err_msg
+            err_msg = "[!] data_to_embeded is empty"
             print(err_msg)
             raise ValueError(f"{err_msg}, data_to_embeded -> "
                 f"type: {type(data_to_embeded)}, value: {data_to_embeded}")
@@ -70,10 +70,9 @@ class EmbededStrategyLSB(StrategyLSB):
         for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             new_pixel = list(pixel)
             for k_color, v_color in colors.items():
-                if not bits:
-                    continue
-                new_pixel[v_color] = (pixel[v_color] >> 1) << 1 | int(bits[0])
-                bits.pop(0)
+                if bits:
+                    new_pixel[v_color] = (pixel[v_color] >> 1) << 1 | int(bits[0])
+                    bits.pop(0)
             self.image.putpixel(coor, tuple(new_pixel))
             if not bits:
                 print(f"[+] end embeded here {coor}")
@@ -171,6 +170,6 @@ if __name__ == "__main__":
     p = {"data_to_embeded": "bonjour"}
     # img.apply_strategy(color_seq=c, params_strategy=p)
     # img.apply_strategy()
-    # img.apply_strategy(params_strategy=p)
+    img.apply_strategy(params_strategy=p)
     himg = ImageLSB("hidden_test.png", ExtractStrategyLSB)
     himg.apply_strategy()
