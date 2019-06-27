@@ -7,6 +7,12 @@ from datetime import datetime
 from itertools import chain, islice
 from abc import ABCMeta, abstractmethod
 
+"""
+    TODO: logger centralisé
+    TODO: tester import dans un autre projet
+
+"""
+
 ############################## functions #######################################
 
 def iter_by_blockN(iterable, len_bloc=8, format=tuple):
@@ -29,29 +35,35 @@ def bin_to_str(sbin:str) -> bytes:
         b_str += binascii.unhexlify(hexa)
     return b_str
 
-def extract_bit(byte:int, mask:tuple=(0,)) -> str:
-    b = ""
-    for i in mask:
-        b += str((byte >> i) & 1)
-    return b
+
 
 ############################## class ###########################################
 
-class StrategyLSB(metaclass=ABCMeta):
+class PixelLSB:
+    def __init__(self, coor:tuple, color:tuple):
+        self.coor = coor
+        self.color = color
 
+    def extract_bit(self, color:int, mask:tuple=(0,)) -> str:
+        bit = ""
+        for i in mask:
+            bit += str((self.color[color] >> i) & 1)
+        return bit
+
+
+class StrategyLSB(metaclass=ABCMeta):
     @abstractmethod
     def action(self, absi, ordo, colors):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def get_pixel(cls, img, absi:int, ordo:int):
         for y in ordo:
             for x in absi:
-                yield (x, y), img.getpixel((x, y))
+                yield PixelLSB((x, y), img.getpixel((x, y)))
 
 
 class EmbededStrategyLSB(StrategyLSB):
-
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         data_to_embeded = params_strategy.get("data_to_embeded")
         file_name_ = params_strategy.get('file_name', self.file_name)
@@ -66,14 +78,15 @@ class EmbededStrategyLSB(StrategyLSB):
         bits = list(str_to_bin(data_to_embeded))
         # TODO print mask/params
         print(f"[+] data to embeded -> {data_to_embeded}")
-        for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            new_pixel = list(pixel)
+        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+            new_pixel = list(pixel.color)
             for k_color, v_color in colors.items():
                 if bits:
-                    # TODO appliquer un mask comme dans ExtractStrategyLSB
-                    new_pixel[v_color] = (pixel[v_color] >> 1) << 1 | int(bits[0])
+                    # TODO 1: à adapter avec la classe PixelLSB
+                    # TODO 2: appliquer un mask comme dans ExtractStrategyLSB
+                    new_pixel[v_color] = (pixel.color[v_color] >> 1) << 1 | int(bits[0])
                     bits.pop(0)
-            self.image.putpixel(coor, tuple(new_pixel))
+            self.image.putpixel(pixel.coor, tuple(new_pixel))
             if not bits:
                 print(f"[+] end embeded here {coor}")
                 break
@@ -83,15 +96,15 @@ class EmbededStrategyLSB(StrategyLSB):
 
 
 class ExtractStrategyLSB(StrategyLSB):
-
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
         mask = params_strategy.get("bit_mask", {})
 
         # TODO print mask/params
-        for _, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+        # TODO retester extract avec la classe PixelLSB
+        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
-                extract += extract_bit(pixel[v_color], mask.get(k_color, (0,)))
+                extract += pixel.extract_bit(v_color, mask.get(k_color, (0,)))
 
         with open("binary.txt", mode="w") as fp:
             print("[+] binary.txt write")
@@ -102,7 +115,6 @@ class ExtractStrategyLSB(StrategyLSB):
 
 
 class DetectStrategyLSB(StrategyLSB):
-
     def edit_one_color(self, pixel:tuple) -> tuple:
         pass
 
@@ -111,12 +123,12 @@ class DetectStrategyLSB(StrategyLSB):
 
     def detect_color(self, decal:int, color:int=None) -> Image:
         # TODO modifier le type de la nouvelle image en fonction de color
-        # trouver un moyen pour l'édition de pixel 
+        # trouver un moyen pour l'édition de pixel
         new_img = Image.new("L", self.image.size, (255, 255, 255))
-        for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             if color:
                 new_pixel = pixel_editor(pixel)
-            self.image.putpixel(coor, new_pixel)
+            self.image.putpixel(pixel.coor, new_pixel)
         return new_img
 
 
@@ -141,7 +153,6 @@ class DetectStrategyLSB(StrategyLSB):
 
 
 class ImageLSB():
-
     def __init__(self, image, strategy_lsb:StrategyLSB=None):
         self.image = image
         self.width, self.height = self.image.size
@@ -166,8 +177,8 @@ class ImageLSB():
 
     def color_sequence(self, custom:tuple=None) -> dict:
         colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
-        # Ugly :(
-        if len(self.image.getpixel((0,0))) == 4:
+
+        if len(self.image.getpixel((0,0))) == 4: # Ugly :(
             colors["ALPHA"] = 3
         if custom:
             colors = {c: _colors[c] for c in custom}
