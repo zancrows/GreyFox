@@ -103,8 +103,41 @@ class ExtractStrategyLSB(StrategyLSB):
 
 class DetectStrategyLSB(StrategyLSB):
 
+    def edit_one_color(self, pixel:tuple) -> tuple:
+        pass
+
+    def edit_all_color(self, pixel:tuple) -> tuple:
+        pass
+
+    def detect_color(self, decal:int, color:int=None) -> Image:
+        # TODO modifier le type de la nouvelle image en fonction de color
+        # trouver un moyen pour l'édition de pixel 
+        new_img = Image.new("L", self.image.size, (255, 255, 255))
+        for coor, pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+            if color:
+                new_pixel = pixel_editor(pixel)
+            self.image.putpixel(coor, new_pixel)
+        return new_img
+
+
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
-        raise NotImplementedError()
+        nbr_color = len(colors)
+        all_color = params_strategy.get("detect_all_color", True)
+
+        if all_color:
+            new_size = (self.width*7+6, self.height * (nbr_color+1) + nbr_color)
+        else:
+            new_size = (self.width*7+6, self.height * nbr_color + (nbr_color-1))
+
+        new_img = Image.new("RGB", new_size, (0, 0, 0))
+        for i, j in enumerate(range(0, new_size[0], width), 1):
+            for v_color in colors.values():
+                new_img.paste(detect_color(i, v_color))
+            if all_color:
+                new_img.paste(detect_color(i))
+
+        # new_img.save("")
+        new_img.show()
 
 
 class ImageLSB():
@@ -131,13 +164,14 @@ class ImageLSB():
             print(err_msg)
             raise TypeError(f"{err_msg}, image -> {type(image)}, {image}")
 
-    def color_sequence(self, custom:tuple=None):
-        _colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
+    def color_sequence(self, custom:tuple=None) -> dict:
+        colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
+        # Ugly :(
         if len(self.image.getpixel((0,0))) == 4:
-            _colors["ALPHA"] = 3
+            colors["ALPHA"] = 3
         if custom:
-            _colors = {c: _colors[c] for c in custom}
-        return  _colors
+            colors = {c: _colors[c] for c in custom}
+        return  colors
 
     def apply_strategy(self, coor:dict={}, color_seq:tuple=None, params_strategy:dict={}) -> None:
         absi = range(*coor["x"]) if coor.get("x") else range(self.width)
