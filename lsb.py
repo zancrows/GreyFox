@@ -126,8 +126,8 @@ class EmbededStrategyLSB(StrategyLSB):
                 f"type: {type(data_to_embeded)}, value: {data_to_embeded}")
 
         bits = list(str_to_bin(data_to_embeded))
-        # TODO print mask/params
-        print(f"[+] data to embeded -> {data_to_embeded}")
+        print(f"[+] Data to embeded -> {data_to_embeded}")
+
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 if bits:
@@ -147,33 +147,36 @@ class ExtractStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
         mask = params_strategy.get("bit_mask", {})
-        # TODO print mask/params
+        print(f"[+] Mask -> {mask}")
+        
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 extract += pixel[v_color].extract_bit(mask.get(k_color, (0,)))
 
         with open("binary.txt", mode="w") as fp:
-            print("[+] binary.txt write")
+            print("[+] File binary.txt write")
             fp.write(extract)
         with open("binary.bin", mode="bw") as fp:
-            print("[+] binary.bin write")
+            print("[+] File binary.bin write")
             fp.write(bin_to_str(extract))
 
 
 class DetectStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
-        nbr_color = len(colors)
         all_color = params_strategy.get("detect_all_color", False)
+        nbr_color = len(colors)
+        width = len(absi)
+        height = len(ordo)
 
         if all_color:
-            print(f"[+] all color -> Yes")
-            new_size = (self.width*7+6, self.height * (nbr_color+1) + nbr_color)
+            print(f"[+] All color -> Yes")
+            new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
             mode, c = "RGB", 0
             if self.nbr_color_pixel == 4:
                 mode, c = "RGBA", (255, 255, 255)
         else:
-            print(f"[+] all color -> No")
-            new_size = (self.width*7+6, self.height * nbr_color + (nbr_color-1))
+            print(f"[+] All color -> No")
+            new_size = (width*7+6, height * nbr_color + (nbr_color-1))
         img_detect = Image.new("RGB", new_size, (0, 0, 0))
 
         for i, j in enumerate(range(0, new_size[0], self.width), 1):
@@ -192,7 +195,6 @@ class DetectStrategyLSB(StrategyLSB):
                     (pixel << i) & 128
                     new_img.putpixel(pixel.coor, pixel.color)
                 img_detect.paste(new_img, dimension)
-
         img_detect.show()
 
 
@@ -253,7 +255,7 @@ class ImageLSB():
             end = datetime.now()
             print(f"[+] time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
-            print("\n###########################################################", end ="\n\n")
+            print("\n" + "#" * 60, end ="\n\n")
 
 if __name__ == "__main__":
     img = ImageLSB("kitty.png", DetectStrategyLSB)
