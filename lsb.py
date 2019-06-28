@@ -9,8 +9,10 @@ from abc import ABCMeta, abstractmethod
 
 """
     TODO: logger centralisé
+    TODO: commenter le code
     TODO: tester import dans un autre projet
-
+    TODO: log dans DetectStrategyLSB
+    TODO : optimiser DetectStrategyLSB
 """
 
 ############################## functions #######################################
@@ -74,6 +76,13 @@ class PixelLSB:
             self.color = [c | other for c in self.color]
         return self
 
+    def __and__(self, other:int):
+        if self._select_color:
+            self._color[self._select_color] &= other
+        else:
+            self.color = [c & other for c in self.color]
+        return self
+
     def __getitem__(self, idx:int):
         self._select_color = idx
         return self
@@ -97,7 +106,7 @@ class StrategyLSB(metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def get_pixel(cls, img, absi:int, ordo:int):
+    def get_pixel(cls, img:Image, absi:int, ordo:int):
         for y in ordo:
             for x in absi:
                 yield PixelLSB((x, y), img.getpixel((x, y)))
@@ -121,8 +130,8 @@ class EmbededStrategyLSB(StrategyLSB):
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 if bits:
-                    # TODO 1: à adapter avec la classe PixelLSB
-                    (pixel[v_color] >> 1) << 1 | int(bits[0])
+                    # TODO à adapter avec un mask
+                    ((pixel[v_color] >> 1) << 1) | int(bits[0])
                     bits.pop(0)
             self.image.putpixel(pixel.coor, pixel.color)
             if not bits:
@@ -151,44 +160,47 @@ class ExtractStrategyLSB(StrategyLSB):
 
 
 class DetectStrategyLSB(StrategyLSB):
-    def detect_color(self, decal:int, color:int=None) -> Image:
-        # TODO modifier le type de la nouvelle image en fonction de color
-        # trouver un moyen pour l'édition de pixel
-        new_img = Image.new("L", self.image.size, (255, 255, 255))
-        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            if color:
-                new_pixel = pixel_editor(pixel)
-            self.image.putpixel(pixel.coor, new_pixel)
-        return new_img
-
-
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         nbr_color = len(colors)
-        all_color = params_strategy.get("detect_all_color", True)
+        all_color = params_strategy.get("detect_all_color", False)
 
         if all_color:
             new_size = (self.width*7+6, self.height * (nbr_color+1) + nbr_color)
         else:
             new_size = (self.width*7+6, self.height * nbr_color + (nbr_color-1))
+        img_detect = Image.new("RGB", new_size, (0, 0, 0))
 
-        new_img = Image.new("RGB", new_size, (0, 0, 0))
-        for i, j in enumerate(range(0, new_size[0], width), 1):
-            for v_color in colors.values():
-                new_img.paste(detect_color(i, v_color))
+        for i, j in enumerate(range(0, new_size[0], self.width), 1):
+            for k, v_color in enumerate(colors.values()):
+                dimension = (i+j, self.height*k+k)
+                new_img = Image.new("L", self.image.size, 0)
+                for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+                    (pixel[v_color] << i) & 128
+                    pixel.color = (255,) if pixel.color[v_color] else (0,)
+                    new_img.putpixel(pixel.coor, pixel.color)
+                img_detect.paste(new_img, dimension)
+
             if all_color:
-                new_img.paste(detect_color(i))
-
-        # new_img.save("")
-        new_img.show()
+                mode, c = "RGB", 0
+                if self.nbr_color_pixel == 4:
+                    mode, c = "RGBA", (255, 255, 255)
+                new_img = Image.new(mode, self.image.size, c)
+                dimension = (i+j, dimension[1] + self.height + (k+1))
+                for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
+                    (pixel << i) & 128
+                    new_img.putpixel(pixel.coor, pixel.color)
+                img_detect.paste(new_img, dimension)
+        img_detect.show()
 
 
 class ImageLSB():
-    def __init__(self, image, strategy_lsb:StrategyLSB=None):
+    def __init__(self, image:Image, strategy_lsb:StrategyLSB=None):
         self.image = image
         self.width, self.height = self.image.size
         self.strategy_lsb = strategy_lsb
         # /!\ attention 'filename' indique le chemin  absolu de l'image /!\
         self.file_name = self.image.filename
+        self.nbr_color_pixel = len(self.image.getpixel((0,0))) #Ugly :(
 
     @property
     def image(self) -> Image.Image:
@@ -208,7 +220,7 @@ class ImageLSB():
     def color_sequence(self, custom:tuple=None) -> dict:
         colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
 
-        if len(self.image.getpixel((0,0))) == 4: # Ugly :(
+        if  self.nbr_color_pixel == 4:
             colors["ALPHA"] = 3
         if custom:
             colors = {c: _colors[c] for c in custom}
@@ -241,8 +253,5 @@ class ImageLSB():
             print("\n###########################################################", end ="\n\n")
 
 if __name__ == "__main__":
-    img = ImageLSB("test.png", EmbededStrategyLSB)
-    p = {"data_to_embeded": "coucou ca va ? oui et toi tu vas bien ?"}
-    img.apply_strategy(params_strategy=p)
-    img.strategy_lsb = ExtractStrategyLSB
+    img = ImageLSB("tux_hidden.png", DetectStrategyLSB)
     img.apply_strategy()
