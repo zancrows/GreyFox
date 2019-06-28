@@ -35,20 +35,60 @@ def bin_to_str(sbin:str) -> bytes:
         b_str += binascii.unhexlify(hexa)
     return b_str
 
-
-
 ############################## class ###########################################
 
 class PixelLSB:
     def __init__(self, coor:tuple, color:tuple):
         self.coor = coor
         self.color = color
+        self._select_color = None
 
-    def extract_bit(self, color:int, mask:tuple=(0,)) -> str:
-        bit = ""
-        for i in mask:
-            bit += str((self.color[color] >> i) & 1)
-        return bit
+    @property
+    def color(self) -> tuple:
+        return tuple(self._color)
+
+    @color.setter
+    def color(self, color:tuple) -> None:
+        self._color = list(color)
+
+    def __lshift__(self, other:int):
+        if self._select_color is not None:
+            self._color[self._select_color] <<= other
+            self.color = self._color
+        else:
+            self.color = [c << other for c in self.color]
+        return self
+
+    def __rshift__(self, other:int):
+        if self._select_color is not None:
+            self._color[self._select_color] >>= other
+            self.color = self._color
+        else:
+            self.color = [c >> other for c in self.color]
+        return self
+
+    def __or__(self, other:int):
+        if self._select_color:
+            self._color[self._select_color] |= other
+        else:
+            self.color = [c | other for c in self.color]
+        return self
+
+    def __getitem__(self, idx:int):
+        self._select_color = idx
+        return self
+
+    def __repr__(self):
+        return f"{self.coor}, {self.color}"
+
+    def extract_bit(self, mask:tuple=(0,)) -> str:
+        if self._select_color is not None:
+            bit = ""
+            for i in mask:
+                bit += str((self.color[self._select_color] >> i) & 1)
+            return bit
+        else:
+            raise IndexError("Index is needed for use this method")
 
 
 class StrategyLSB(metaclass=ABCMeta):
@@ -79,16 +119,14 @@ class EmbededStrategyLSB(StrategyLSB):
         # TODO print mask/params
         print(f"[+] data to embeded -> {data_to_embeded}")
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            new_pixel = list(pixel.color)
             for k_color, v_color in colors.items():
                 if bits:
                     # TODO 1: à adapter avec la classe PixelLSB
-                    # TODO 2: appliquer un mask comme dans ExtractStrategyLSB
-                    new_pixel[v_color] = (pixel.color[v_color] >> 1) << 1 | int(bits[0])
+                    (pixel[v_color] >> 1) << 1 | int(bits[0])
                     bits.pop(0)
-            self.image.putpixel(pixel.coor, tuple(new_pixel))
+            self.image.putpixel(pixel.coor, pixel.color)
             if not bits:
-                print(f"[+] end embeded here {coor}")
+                print(f"[+] end embeded here {pixel.coor}")
                 break
 
         print(f"[+] save file with hidden data -> {file_name}")
@@ -99,12 +137,10 @@ class ExtractStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
         mask = params_strategy.get("bit_mask", {})
-
         # TODO print mask/params
-        # TODO retester extract avec la classe PixelLSB
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
-                extract += pixel.extract_bit(v_color, mask.get(k_color, (0,)))
+                extract += pixel[v_color].extract_bit(mask.get(k_color, (0,)))
 
         with open("binary.txt", mode="w") as fp:
             print("[+] binary.txt write")
@@ -115,12 +151,6 @@ class ExtractStrategyLSB(StrategyLSB):
 
 
 class DetectStrategyLSB(StrategyLSB):
-    def edit_one_color(self, pixel:tuple) -> tuple:
-        pass
-
-    def edit_all_color(self, pixel:tuple) -> tuple:
-        pass
-
     def detect_color(self, decal:int, color:int=None) -> Image:
         # TODO modifier le type de la nouvelle image en fonction de color
         # trouver un moyen pour l'édition de pixel
@@ -208,13 +238,11 @@ class ImageLSB():
             end = datetime.now()
             print(f"[+] time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
+            print("\n###########################################################", end ="\n\n")
 
 if __name__ == "__main__":
     img = ImageLSB("test.png", EmbededStrategyLSB)
-    # c = ("GREEN", "RED")
-    p = {"data_to_embeded": "bonjour"}
-    # img.apply_strategy(color_seq=c, params_strategy=p)
-    # img.apply_strategy()
+    p = {"data_to_embeded": "coucou ca va ? oui et toi tu vas bien ?"}
     img.apply_strategy(params_strategy=p)
-    himg = ImageLSB("hidden_test.png", ExtractStrategyLSB)
-    himg.apply_strategy()
+    img.strategy_lsb = ExtractStrategyLSB
+    img.apply_strategy()
