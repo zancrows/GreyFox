@@ -8,11 +8,12 @@ from itertools import chain, islice
 from abc import ABCMeta, abstractmethod
 
 """
-    TODO: logger centralisé
+    TODO: logger centralisé, mode verbose / non verbose
     TODO: commenter le code
     TODO: tester import dans un autre projet
     TODO: log dans DetectStrategyLSB
     TODO : optimiser DetectStrategyLSB
+    idée multi process pour la detection
 """
 
 ############################## functions #######################################
@@ -165,8 +166,13 @@ class DetectStrategyLSB(StrategyLSB):
         all_color = params_strategy.get("detect_all_color", False)
 
         if all_color:
+            print(f"[+] all color -> Yes")
             new_size = (self.width*7+6, self.height * (nbr_color+1) + nbr_color)
+            mode, c = "RGB", 0
+            if self.nbr_color_pixel == 4:
+                mode, c = "RGBA", (255, 255, 255)
         else:
+            print(f"[+] all color -> No")
             new_size = (self.width*7+6, self.height * nbr_color + (nbr_color-1))
         img_detect = Image.new("RGB", new_size, (0, 0, 0))
 
@@ -179,17 +185,14 @@ class DetectStrategyLSB(StrategyLSB):
                     pixel.color = (255,) if pixel.color[v_color] else (0,)
                     new_img.putpixel(pixel.coor, pixel.color)
                 img_detect.paste(new_img, dimension)
-
             if all_color:
-                mode, c = "RGB", 0
-                if self.nbr_color_pixel == 4:
-                    mode, c = "RGBA", (255, 255, 255)
                 new_img = Image.new(mode, self.image.size, c)
                 dimension = (i+j, dimension[1] + self.height + (k+1))
                 for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
                     (pixel << i) & 128
                     new_img.putpixel(pixel.coor, pixel.color)
                 img_detect.paste(new_img, dimension)
+
         img_detect.show()
 
 
@@ -253,5 +256,5 @@ class ImageLSB():
             print("\n###########################################################", end ="\n\n")
 
 if __name__ == "__main__":
-    img = ImageLSB("tux_hidden.png", DetectStrategyLSB)
+    img = ImageLSB("kitty.png", DetectStrategyLSB)
     img.apply_strategy()
