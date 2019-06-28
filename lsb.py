@@ -148,7 +148,7 @@ class ExtractStrategyLSB(StrategyLSB):
         extract = ""
         mask = params_strategy.get("bit_mask", {})
         print(f"[+] Mask -> {mask}")
-        
+
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 extract += pixel[v_color].extract_bit(mask.get(k_color, (0,)))
@@ -249,14 +249,15 @@ class ImageLSB():
             f"type: {type(self.strategy_lsb)}, value: {self.strategy_lsb}")
         else:
             print(f"[+] Start apply strategy with {self.strategy_lsb.__name__}")
-            print(f"[+] color sequence -> {repr_colors}")
+            print(f"[+] Color sequence -> {repr_colors}")
             start = datetime.now()
             self.strategy_lsb.action(self, absi, ordo, colors, params_strategy)
             end = datetime.now()
-            print(f"[+] time -> {end - start}")
+            print(f"[+] Time -> {end - start}")
             print(f"[+] End apply strategy with {self.strategy_lsb.__name__}")
             print("\n" + "#" * 60, end ="\n\n")
 
 if __name__ == "__main__":
-    img = ImageLSB("kitty.png", DetectStrategyLSB)
-    img.apply_strategy()
+    img = ImageLSB("boncourage.png", DetectStrategyLSB)
+    p = {"detect_all_color": True}
+    img.apply_strategy(params_strategy=p)
