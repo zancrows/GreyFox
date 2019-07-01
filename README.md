@@ -47,16 +47,6 @@ Trois paramètres possibles:
 from lsb import ImageLSB  
 
 img_lsb = ImageLSB("image.png", "extract")  
-coor = {"x": (0, 20), "y": (0, 20)}
-img_lsb.apply_strategy(coor=coor)
+coor = {"x": (0, 20), "y": (0, 20)}  
+img_lsb.apply_strategy(coor=coor)  
 ```
-les tuples vont être changés en ```range``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci: 
-```python 
-coor = {"x": (0, 20, 2), "y": (0, 20)}
-```
-par défaut les ranges sont la hauteur et largeur de l'image.  
-
-<h3>color_seq</h3>
-<h3>params_strategy</h3>
-
-<h3> Strategie custom </h3>
