@@ -46,7 +46,6 @@ Trois paramètres possibles:
 ```python
 from lsb import ImageLSB  
 
-img_lsb = ImageLSB("image.png", "extract")  
-coor = {"x": (0, 20), "y": (0, 20)}  
-img_lsb.apply_strategy(coor=coor)  
+img_lsb = ImageLSB("image.png", "detect")  
+img_lsb.apply_strategy()  
 ```
