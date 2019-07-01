@@ -1,6 +1,62 @@
 # stegano_tool
 
-passer en master, faire le readme<br>
-TODO 3: optimiser DetectStrategyLSB, idée multi process pour la detection<br>
-TODO 4: implementer utilisation des maks pour EmbededStrategyLSB<br>
-TODO 5: choisir la sortie du logger
+Outil de stéganographie qui permet de faire du LSB (Less Significant Bit).  
+
+## Fonctionnement basique  
+
+Il est possible de faire fonctionner le programme en 3 modes différents appelés stratégies ici:  
+* Extraction de données  -> ExtractStratgeyLSB
+* Incrustation de données  -> EmbededStrategyLSB
+* Détection de données  -> DetectStrategyEmbeded
+
+Extraction:  
+```python
+from lsb import ImageLSB  
+
+img_lsb = ImageLSB("image.png", "extract")  
+img_lsb.apply_strategy()  
+```
+
+Incrustation (voir plus bas pour params_strategy):  
+```python
+from lsb import ImageLSB  
+
+img_lsb = ImageLSB("image.png", "embeded")  
+p = {"data_to_embeded": "des donnees a cacher"}
+img_lsb.apply_strategy(params_strategy=p)  
+```
+
+Détection:  
+```python
+from lsb import ImageLSB  
+
+img_lsb = ImageLSB("image.png", "detect")  
+img_lsb.apply_strategy()  
+```
+
+## Options  
+
+Au moment d'appliquer la stratégie choisie il est possible de passer certains paramètres pour affiner le comportement de celle-ci.  
+Trois paramètres possibles:
+* coor -> un dictionnaire pour définir une plage sur lequel la stratégie va être appliquée  
+* color_seq -> un tuple pour définir sur quelles couleurs il faut appliquer la stratégie  
+* params_strategy -> un dictionnaire qui contient d'autres paramètres spécifiques aux stratégies  
+
+<h3>coor</h3>
+```python
+from lsb import ImageLSB  
+
+img_lsb = ImageLSB("image.png", "extract")  
+coor = {"x": (0, 20), "y": (0, 20)}
+img_lsb.apply_strategy(coor=coor)
+```
+les tuples vont être changés en ```range``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci: 
+```python 
+coor = {"x": (0, 20, 2), "y": (0, 20)}
+```
+par défaut les ranges sont la hauteur et largeur de l'image.  
+
+<h3>color_seq</h3>
+<h3>params_strategy</h3>
+
+<h3> Strategie custom </h3>
