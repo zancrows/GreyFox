@@ -8,12 +8,6 @@ from itertools import chain, islice
 from abc import ABCMeta, abstractmethod
 from colorama import init, Fore
 
-"""
-    -> passer en master, faire le readme
-    TODO 3: optimiser DetectStrategyLSB, idée multi process pour la detection
-    TODO 4: implementer utilisation des maks pour EmbededStrategyLSB
-    TODO 5: choisir la sortie du logger
-"""
 
 ############################## functions #######################################
 
@@ -150,7 +144,6 @@ class EmbededStrategyLSB(StrategyLSB):
         for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
             for k_color, v_color in colors.items():
                 if bits:
-                    # TODO à adapter avec un mask
                     ((pixel[v_color] >> 1) << 1) | int(bits[0])
                     bits.pop(0)
             self.image.putpixel(pixel.coor, pixel.color)
