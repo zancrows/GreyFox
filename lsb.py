@@ -9,12 +9,10 @@ from abc import ABCMeta, abstractmethod
 from colorama import init, Fore
 
 """
-    TODO: commenter le code
     TODO: tester import dans un autre projet
-    TODO: log dans DetectStrategyLSB
-    TODO : optimiser DetectStrategyLSB
+    TODO : optimiser DetectStrategyLSB, idée multi process pour la detection
     TODO implementer utilisation des maks pour EmbededStrategyLSB
-    idée multi process pour la detection
+    TODO choisir la sortie du logger
 """
 
 ############################## functions #######################################
@@ -29,13 +27,15 @@ def coroutine(func):
 @coroutine
 def logger(verbose:bool=True):
     init()
+    prefixes = {
+        "info": "[+]",
+        "error": Fore.RED + "[!]"
+    }
     while True:
         type, msg = yield
         if verbose:
-            if type == "info":
-                print(f"[+] {msg}")
-            elif type == "error":
-                print(Fore.RED + f"[!] {msg}")
+            prefixe = prefixes.get(type, "[?]")
+            print(f"{prefixe} {msg}")
 
 def iter_by_blockN(iterable, len_bloc=8, format=tuple):
     it = iter(iterable)
@@ -187,6 +187,10 @@ class DetectStrategyLSB(StrategyLSB):
         nbr_color = len(colors)
         width = len(absi)
         height = len(ordo)
+        show = params_strategy.get("show", True)
+        save = params_strategy.get("save", False)
+        file_name_ = params_strategy.get('file_name', self.file_name)
+        file_name = f"detect_{file_name_}"
 
         if all_color:
             self.logger.senf(("info", f"All color -> Yes"))
@@ -218,7 +222,14 @@ class DetectStrategyLSB(StrategyLSB):
                 img_detect.paste(new_img, dimension)
         end = datetime.now()
         self.logger.send(("info", f"Detect traitement time -> {end - start}"))
-        img_detect.show()
+
+        if show:
+            img_detect.show()
+        if save:
+            start_save = datetime.now()
+            img_detect.save(file_name)
+            end_save = datetime.now()
+            self.logger.send(("info", f"End save {file_name} -> {end_save - start_save}"))
 
 
 class ImageLSB():
@@ -278,10 +289,9 @@ class ImageLSB():
             end = datetime.now()
             self.logger.send(("info", f"Total time -> {end - start}"))
             self.logger.send(("info", f"End apply strategy with {self.strategy_lsb.__name__}"))
-            self.logger.send(("info", "\n\n" + "#" * 60 + "\n"))
+            self.logger.send(("", "\n\n" + "#" * 60 + "\n"))
 
 if __name__ == "__main__":
-    img = ImageLSB("hidden_test.png", ExtractStrategyLSB)
-    # p = {"detect_all_color": False, "verbose": True}
-    # img.apply_strategy(params_strategy=p)
-    img.apply_strategy()
+    img = ImageLSB("ch9.png", DetectStrategyLSB)
+    p = {"detect_all_color": False}
+    img.apply_strategy(params_strategy=p)
