@@ -9,10 +9,10 @@ from abc import ABCMeta, abstractmethod
 from colorama import init, Fore
 
 """
-    TODO: tester import dans un autre projet
-    TODO : optimiser DetectStrategyLSB, idée multi process pour la detection
-    TODO implementer utilisation des maks pour EmbededStrategyLSB
-    TODO choisir la sortie du logger
+    -> passer en master, faire le readme
+    TODO 3: optimiser DetectStrategyLSB, idée multi process pour la detection
+    TODO 4: implementer utilisation des maks pour EmbededStrategyLSB
+    TODO 5: choisir la sortie du logger
 """
 
 ############################## functions #######################################
@@ -193,7 +193,7 @@ class DetectStrategyLSB(StrategyLSB):
         file_name = f"detect_{file_name_}"
 
         if all_color:
-            self.logger.senf(("info", f"All color -> Yes"))
+            self.logger.send(("info", f"All color -> Yes"))
             new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
             mode, c = "RGB", 0
             if self.nbr_color_pixel == 4:
@@ -255,6 +255,20 @@ class ImageLSB():
             err_msg = "image is not a str or PIL.Image instance"
             raise TypeError(f"{err_msg}, image -> {type(image)}, {image}")
 
+    @property
+    def strategy_lsb(self):
+        return self._strategy_lsb
+
+    @strategy_lsb.setter
+    def strategy_lsb(self, strategy_lsb):
+        strategy = {
+            "detect": DetectStrategyLSB,
+            "extract": ExtractStrategyLSB,
+            "embeded": EmbededStrategyLSB
+        }
+
+        self._strategy_lsb = strategy.get(strategy_lsb, strategy_lsb)
+
     def color_sequence(self, custom:tuple=None) -> dict:
         colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
 
@@ -290,8 +304,3 @@ class ImageLSB():
             self.logger.send(("info", f"Total time -> {end - start}"))
             self.logger.send(("info", f"End apply strategy with {self.strategy_lsb.__name__}"))
             self.logger.send(("", "\n\n" + "#" * 60 + "\n"))
-
-if __name__ == "__main__":
-    img = ImageLSB("ch9.png", DetectStrategyLSB)
-    p = {"detect_all_color": False}
-    img.apply_strategy(params_strategy=p)
