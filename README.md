@@ -42,10 +42,3 @@ Trois paramètres possibles:
 * color_seq -> un tuple pour définir sur quelles couleurs il faut appliquer la stratégie  
 * params_strategy -> un dictionnaire qui contient d'autres paramètres spécifiques aux stratégies  
 
-<h3>coor</h3>
-```python
-from lsb import ImageLSB  
-
-img_lsb = ImageLSB("image.png", "detect")  
-img_lsb.apply_strategy()  
-```
