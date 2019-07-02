@@ -76,4 +76,31 @@ Par défaut la séquence vaut RED GREEN BLUE et META quand il y a.
 
 ### params_strategy:  
 
+paramètre commun aux stratégies:  
+
+- verbose: permet d'activer ou non la verbosité. Prend un booléen. Par défaut à True.  
+```python
+from lsb import ImageLSB
+
+img_lsb = ImageLSB("image.png", "detect")  
+p = {"verbose": False} # ici on désactive la verbosité  
+img_lsb.apply_strategy(params_strategy=p)  
+```
+
+paramètres de la stratégie ExtractStrategyLSB:
+
+- mask: permet d'appliquer un 'masque' et donner un ordre d'extraction par couleur. Prend un dictionnaire contenant un tuple par             couleur.  
+exemple:  
+```python
+p = {
+  "mask": {
+     "RED": (0,2,3),
+     "BLUE" (0,1,2)
+  }
+}
+```
+Ici on va appliquer un masque sur les couleurs rouges et bleu.  
+
 ### strategie custom:  
+
+## Remarques
