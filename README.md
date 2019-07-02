@@ -71,6 +71,7 @@ les différentes valeurs possibles sont :
 * GREEN
 * BLUE
 * META (quand l'image supporte)
+Par défaut la séquence vaut RED GREEN BLUE et META quand il y a.  
 
 ### params_strategy:  
 
