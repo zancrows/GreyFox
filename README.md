@@ -94,12 +94,25 @@ exemple:
 ```python
 p = {
   "mask": {
-     "RED": (0,2,3),
-     "BLUE" (0,1,2)
+     "RED": (0, 2, 3),
+     "BLUE" (0, 1, 2)
   }
 }
 ```
-Ici on va appliquer un masque sur les couleurs rouges et bleu.  
+Ici on va appliquer un masque sur les couleurs rouges et bleu. Par défaut un masque vaut (0,).  
+explication du fonctionnement du masque:  
+Pour un pixel RGB (73, 128, 70) on va prendre le premier, troisième et quatrième bit pour le rouge et le premier, deuxième et troisième pour le bleu.
+
+exemple avec le rouge:
+```
+73 -> 01001001  
+          ^^ ^  
+          || |  
+          32 0  
+```
+L'extraction sur le rouge donnera 101.  
+L'ordre dans le tuple est important si on met ```"RED: (0, 3, 2)"``` l'extraction donnera 110.  
+
 
 ### strategie custom:  
 
