@@ -58,7 +58,7 @@ coor = {"x": (0, 20, 2), "y": (0, 20)}
 par défaut les ranges sont la hauteur et largeur de l'image.  
 
 ### color_seq:  
-```
+```python
 from lsb import ImageLSB
 
 img_lsb = ImageLSB("image.png", "detect")  
