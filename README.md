@@ -146,5 +146,5 @@ img.apply_strategy()
 ```
 
 ## Remarques
-La détection n'est pas très performante et peut prendre plusieurs minutes, 7 à 21min en fonction en fonction du pc pour une image 2000 par 1333 pixel.
+La détection n'est pas très performante et peut prendre plusieurs minutes, 7 à 21min en fonction du pc pour une image 2000 par 1333 pixel.
 
