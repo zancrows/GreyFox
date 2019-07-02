@@ -141,8 +141,8 @@ class CustomStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo: range, colors:dict, params_strategy:dict):
         pass
 
-img = ImageLSB("image.png", CustomStrategyLSB)
-img.apply_strategy()
+img_lsb = ImageLSB("image.png", CustomStrategyLSB)
+img_lsb.apply_strategy()
 ```
 
 ## Remarques
