@@ -127,7 +127,7 @@ paramètres de stratégie pour DetectStrategyLSB:
 
 - detect_all_color: permet de faire une detection sur toutes les couleurs en même temps en plus de chaque couleur. Prend un booléen. Par défaut à False.   
 - save:  permet de sauvegarder l'image générée pour la détection. Prend un booléen. Par défaut à False.  
-- file_name: pareil que pour EmbededStrategyLSB sauf que le prefix sera 'detect' au lieu de 'hidden', utile pour save.  
+- file_name: pareil que pour EmbededStrategyLSB sauf que le prefixe sera 'detect' au lieu de 'hidden', utile pour save.  
 - show: permet de définir si on affiche l'image générée par la détection. Prend un booléen. Par défaut à True.  
 
 ### stratégie custom:  
@@ -138,7 +138,7 @@ Il est possible de développer sa propre stratégie
 from lsb import ImageLSB, StrategyLSB
 
 class CustomStrategyLSB(StrategyLSB):
-    def action(self, absi:range,ordo: range, colors:dict, params_strategy:dict):
+    def action(self, absi:range, ordo: range, colors:dict, params_strategy:dict):
         pass
 
 img = ImageLSB("image.png", CustomStrategyLSB)
