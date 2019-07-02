@@ -54,7 +54,7 @@ from lsb import ImageLSB
 
 img_lsb = ImageLSB("image.png", "detect") 
 coor = {"x": (0, 20), "y": (0, 20)}  
-img_lsb.apply_strategy()  
+img_lsb.apply_strategy(coor=coor)  
 ```
 
 les tuples vont être changés en ```range``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci:  
