@@ -110,8 +110,9 @@ exemple avec le rouge:
           32 0  
 ```
 L'extraction sur le rouge donnera 101.  
-L'ordre dans le tuple est important si on met ```"RED: (0, 3, 2)"``` l'extraction donnera 110.  
+L'ordre dans le tuple est important si on met ```"RED": (0, 3, 2)``` l'extraction donnera 110.  
 
+paramètres de stratégie pour ImbededStrategyLSB:  
 
 ### strategie custom:  
 
