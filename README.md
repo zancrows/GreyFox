@@ -42,6 +42,7 @@ Trois paramètres possibles:
 * color_seq -> un tuple pour définir sur quelles couleurs il faut appliquer la stratégie  
 * params_strategy -> un dictionnaire qui contient d'autres paramètres spécifiques aux stratégies  
 
+<h3>coor:</h3>  
 ```python
 from lsb import ImageLSB  
 
@@ -54,3 +55,8 @@ les tuples vont être changés en ```range``` donc il est possible de mettre une
 coor = {"x": (0, 20, 2), "y": (0, 20)}  
 ```  
 par défaut les ranges sont la hauteur et largeur de l'image.  
+
+<h3>color_seq:</h3>  
+<h3>params_strategy:</h3>  
+
+<h3>Strategie custom:</h3>  
