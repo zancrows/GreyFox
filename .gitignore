@@ -1,4 +1,5 @@
-*.bin
-*.png
-*.txt
-!*.py
+__pycache__/
+./*.bin
+./*.png
+./*.txt
+./!*.py
