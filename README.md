@@ -112,8 +112,18 @@ exemple avec le rouge:
 L'extraction sur le rouge donnera 101.  
 L'ordre dans le tuple est important si on met ```"RED": (0, 3, 2)``` l'extraction donnera 110.  
 
-paramètres de stratégie pour ImbededStrategyLSB:  
+paramètres de stratégie pour EmbededStrategyLSB:  
 
-### strategie custom:  
+- data_to_embeded: données à cacher dans l'image, il est obligatoire si il est vide lèvera une exception de type ValueError.  
+- file_name: nom d'enregistrement de l'image avec les données cachées, prend un str, par défaut il enregistre sous le nom 'hidden_<nom de de l'image d'origine>.png'. Si le paramètre est spécifié le nom d'enregistrement sera 'hidden_<file_name>.png'. Pas besoin de spécifier l'extension.  
+
+paramètres de stratégie pour DetectStrategyLSB:  
+
+-detect_all_color: permet de faire une detection sur toutes les couleurs en même temps en plus de chaque couleur. Prend un booléen. Par défaut à False.   
+- save:  permet de sauvegarder l'image générée pour la détection. Prend un booléen. Par défaut à False.  
+- file_name: pareil que pour EmbededStrategyLSB sauf que le prefix sera 'detect' au lieu de 'hidden', utile pour save.  
+- show: permet de définir si on affiche l'image générée par la détection. Prend un booléen. Par défaut à True.  
+
+### stratégie custom:  
 
 ## Remarques
