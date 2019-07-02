@@ -42,4 +42,15 @@ Trois paramètres possibles:
 * color_seq -> un tuple pour définir sur quelles couleurs il faut appliquer la stratégie  
 * params_strategy -> un dictionnaire qui contient d'autres paramètres spécifiques aux stratégies  
 
-...
+```python
+from lsb import ImageLSB  
+
+img_lsb = ImageLSB("image.png", "detect")  
+img_lsb.apply_strategy()  
+```
+
+les tuples vont être changés en ```range``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci:  
+```python
+coor = {"x": (0, 20, 2), "y": (0, 20)}  
+```  
+par défaut les ranges sont la hauteur et largeur de l'image.  
