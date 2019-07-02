@@ -1,6 +1,12 @@
 # stegano_tool
 
 Outil de stéganographie qui permet de faire du LSB (Less Significant Bit).  
+Fonctionne avec python 3.7 et 3.6 (non testé)
+
+dépendances:
+* Pillow
+* itertools
+* colorama
 
 ## Fonctionnement basique  
 
@@ -126,4 +132,19 @@ paramètres de stratégie pour DetectStrategyLSB:
 
 ### stratégie custom:  
 
+Il est possible de développer sa propre stratégie  
+
+```python
+from lsb import ImageLSB, StrategyLSB
+
+class CustomStrategyLSB(StrategyLSB):
+    def action(self, absi:range,ordo: range, colors:dict, params_strategy:dict):
+        pass
+
+img = ImageLSB("image.png", CustomStrategyLSB)
+img.apply_strategy()
+```
+
 ## Remarques
+La détection n'est pas très performante et peut prendre plusieurs minutes, 7 à 21min en fonction en fonction du pc pour une image 2000 par 1333 pixel.
+
