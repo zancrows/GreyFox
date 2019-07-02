@@ -99,9 +99,8 @@ p = {
   }
 }
 ```
-Ici on va appliquer un masque sur les couleurs rouges et bleu. Par défaut un masque vaut (0,).  
-explication du fonctionnement du masque:  
-Pour un pixel RGB (73, 128, 70) on va prendre le premier, troisième et quatrième bit pour le rouge et le premier, deuxième et troisième pour le bleu.
+Ici on va appliquer un masque sur les couleurs rouges et bleu. Par défaut un masque vaut (0,) pour les trois couleurs.  Explication du fonctionnement du masque:  
+Pour un pixel RGB (73, 128, 70) on va prendre le premier, troisième et quatrième bit pour le rouge et le premier, deuxième et troisième pour le bleu, pour le vert il prend le masque par défaut et prend donc que le premier bit.
 
 exemple avec le rouge:
 ```
