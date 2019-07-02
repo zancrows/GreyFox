@@ -46,7 +46,8 @@ Trois paramètres possibles:
 ```python
 from lsb import ImageLSB  
 
-img_lsb = ImageLSB("image.png", "detect")  
+img_lsb = ImageLSB("image.png", "detect") 
+coor = {"x": (0, 20), "y": (0, 20)}  
 img_lsb.apply_strategy()  
 ```
 
@@ -57,6 +58,20 @@ coor = {"x": (0, 20, 2), "y": (0, 20)}
 par défaut les ranges sont la hauteur et largeur de l'image.  
 
 ### color_seq:  
+```
+from lsb import ImageLSB
+
+img_lsb = ImageLSB("image.png", "detect")  
+colors = ("RED", "GREEN")
+img_lsb.apply_strategy(color_seq=colors)  
+```
+Ici la détection va se faire que sur les couleurs rouge et verte.
+les différentes valeurs possibles sont :
+* RED
+* GREEN
+* BLUE
+* META (quand l'image supporte)
+
 ### params_strategy:  
 
 ### strategie custom:  
