@@ -2,7 +2,7 @@
 # coding: utf-8
 
 from PIL import Image
-from lsb import ImageLSB
+from greyfox import ImageLSB
 
 
 """
