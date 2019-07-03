@@ -36,13 +36,16 @@ n = np.array(img)
 # Embeded
 # choix couleur OK
 # mask NOK
-for i in np.nditer(n[:, :, 1:], op_flags=["readwrite"]):
+bits =['1'] * 8
+for i in np.nditer(n[1:, ::2, :], op_flags=["readwrite"]):
     i[...] = ((i >> 1) << 1) | int(bits[0])
     bits.pop(0)
     if not bits:
         break
 
-
+#Extract
+# choix couleur NOK
+# mask NOK
 
 for y in n:
     for x in y:
