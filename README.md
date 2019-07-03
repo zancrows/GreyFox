@@ -16,7 +16,7 @@ Il est possible de faire fonctionner le programme en 3 modes différents appelé
 
 Extraction:  
 ```python
-from lsb import ImageLSB  
+from greyfox import ImageLSB  
 
 img_lsb = ImageLSB("image.png", "extract")  
 img_lsb.apply_strategy()  
@@ -24,7 +24,7 @@ img_lsb.apply_strategy()
 
 Incrustation (voir plus bas pour params_strategy):  
 ```python
-from lsb import ImageLSB  
+from greyfox import ImageLSB  
 
 img_lsb = ImageLSB("image.png", "embeded")  
 p = {"data_to_embeded": "des donnees a cacher"}
@@ -33,7 +33,7 @@ img_lsb.apply_strategy(params_strategy=p)
 
 Détection:  
 ```python
-from lsb import ImageLSB  
+from greyfox import ImageLSB  
 
 img_lsb = ImageLSB("image.png", "detect")  
 img_lsb.apply_strategy()  
@@ -49,7 +49,7 @@ Trois paramètres possibles:
 
 ### coor:  
 ```python
-from lsb import ImageLSB  
+from greyfox import ImageLSB  
 
 img_lsb = ImageLSB("image.png", "detect") 
 coor = {"x": (0, 20), "y": (0, 20)}  
@@ -64,7 +64,7 @@ par défaut les ranges sont la hauteur et largeur de l'image.
 
 ### color_seq:  
 ```python
-from lsb import ImageLSB
+from greyfox import ImageLSB
 
 img_lsb = ImageLSB("image.png", "detect")  
 colors = ("RED", "GREEN")
@@ -85,7 +85,7 @@ paramètre commun aux stratégies:
 
 - verbose: permet d'activer ou non la verbosité. Prend un booléen. Par défaut à True.  
 ```python
-from lsb import ImageLSB
+from greyfox import ImageLSB
 
 img_lsb = ImageLSB("image.png", "detect")  
 p = {"verbose": False} # ici on désactive la verbosité  
@@ -134,7 +134,7 @@ paramètres de stratégie pour DetectStrategyLSB:
 Il est possible de développer sa propre stratégie  
 
 ```python
-from lsb import ImageLSB, StrategyLSB
+from greyfox import ImageLSB, StrategyLSB
 
 class CustomStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo: range, colors:dict, params_strategy:dict):
