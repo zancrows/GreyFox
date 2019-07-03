@@ -1,4 +1,4 @@
-# stegano_tool
+# GreyFox
 
 Outil de stéganographie qui permet de faire du LSB (Less Significant Bit).  
 Fonctionne avec python 3.7 et 3.6 (non testé)
