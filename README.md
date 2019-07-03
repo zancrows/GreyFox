@@ -5,7 +5,6 @@ Fonctionne avec python 3.7 et 3.6 (non testé)
 
 dépendances:
 * Pillow
-* itertools
 * colorama
 
 ## Fonctionnement basique  
