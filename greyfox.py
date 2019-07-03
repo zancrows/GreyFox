@@ -102,14 +102,14 @@ class PixelLSB:
         return self
 
     def __or__(self, other:int):
-        if self._select_color:
+        if self._select_color is not None:
             self._color[self._select_color] |= other
         else:
             self.color = [c | other for c in self.color]
         return self
 
     def __and__(self, other:int):
-        if self._select_color:
+        if self._select_color is not None:
             self._color[self._select_color] &= other
         else:
             self.color = [c & other for c in self.color]
