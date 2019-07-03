@@ -1,5 +1,5 @@
 __pycache__/
-./*.bin
-./*.png
-./*.txt
+*.bin
+*.png
+*.txt
 ./!*.py
