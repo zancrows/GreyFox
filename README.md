@@ -1,4 +1,4 @@
-# stegano_tool
+# GreyFox
 
 passer en master, faire le readme<br>
 TODO 3: optimiser DetectStrategyLSB, idée multi process pour la detection<br>
