@@ -2,6 +2,7 @@
 # python 3.7.3 x86_64
 
 import binascii
+import numpy as np
 from PIL import Image
 from datetime import datetime
 from itertools import chain, islice
@@ -184,13 +185,15 @@ class DetectStrategyLSB(StrategyLSB):
         save = params_strategy.get("save", False)
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"detect_{file_name_}"
+        decal_color = lambda x, d: 255 if ((x << d) & 128) else 0
+        vfunc = np.vectorize(decal_color)
+        array_img = np.array(self.image)
 
+        # TODO a revoir ici
         if all_color:
             self.logger.send(("info", f"All color -> Yes"))
             new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
             mode, c = "RGB", 0
-            if self.nbr_color_pixel == 4:
-                mode, c = "RGBA", (255, 255, 255)
         else:
             self.logger.send(("info", f"All color -> No"))
             new_size = (width*7+6, height * nbr_color + (nbr_color-1))
@@ -200,18 +203,12 @@ class DetectStrategyLSB(StrategyLSB):
         for i, j in enumerate(range(0, new_size[0], self.width), 1):
             for k, v_color in enumerate(colors.values()):
                 dimension = (i+j, self.height*k+k)
-                new_img = Image.new("L", self.image.size, 0)
-                for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-                    (pixel[v_color] << i) & 128
-                    pixel.color = (255,) if pixel.color[v_color] else (0,)
-                    new_img.putpixel(pixel.coor, pixel.color)
+                m_img = vfunc(array_img[:, :, v_color], i)
+                new_img = Image.fromarray(m_img)
                 img_detect.paste(new_img, dimension)
             if all_color:
-                new_img = Image.new(mode, self.image.size, c)
                 dimension = (i+j, dimension[1] + self.height + (k+1))
-                for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-                    (pixel << i) & 128
-                    new_img.putpixel(pixel.coor, pixel.color)
+                new_img = Image.fromarray((array_img << i) & 128)
                 img_detect.paste(new_img, dimension)
         end = datetime.now()
         self.logger.send(("info", f"Detect traitement time -> {end - start}"))
@@ -268,7 +265,7 @@ class ImageLSB():
         if  self.nbr_color_pixel == 4:
             colors["ALPHA"] = 3
         if custom:
-            colors = {c: _colors[c] for c in custom}
+            colors = {c: colors[c] for c in custom}
         return  colors
 
     def apply_strategy(self, coor:dict={}, color_seq:tuple=None, params_strategy:dict={}) -> None:

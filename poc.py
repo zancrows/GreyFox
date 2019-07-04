@@ -11,16 +11,10 @@ from greyfox import ImageLSB
     - tester pour traiter sur des ranges -> slice
     - applications par couleurs avec mask
     - récupération de données
+    - TODO utiliser np.binary_repr
 """
 
-def str_to_bin(string:str) -> str:
-    if string:
-        bits = bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
-        return bits.zfill(8 * ((len(bits) + 7) // 8))
-    return ""
-
-bits = list(str_to_bin("b"))
-print(bits)
+# print(bits)
 # img = Image.open("kitty.png")
 
 # Image.new("RGB", (10, 10), (0, 0, 0)).save("test.png")
@@ -33,24 +27,41 @@ img = Image.open("test.png")
 
 n = np.array(img)
 
-# Embeded
-# choix couleur OK
-# mask NOK
-bits =['1'] * 8
-for i in np.nditer(n[1:, ::2, :], op_flags=["readwrite"]):
-    i[...] = ((i >> 1) << 1) | int(bits[0])
-    bits.pop(0)
-    if not bits:
-        break
+def myfunc(a, decal):
+    if (a << decal) & 128:
+        return 255
+    return 0
 
-#Extract
-# choix couleur NOK
-# mask NOK
+vfunc = np.vectorize(myfunc)
 
-for y in n:
-    for x in y:
-        print(x, end=" ")
-    print()
+b = np.array([
+    [[0,1,2], [3,4,5], [6,7,8]],
+    [[10, 11, 12], [13, 14, 15], [16, 17, 18]],
+    [[100, 110, 120], [130, 140, 150], [160, 170, 180]],
+])
 
-# for i in range(4):
-#     print(himg.getpixel((i,0)), img.getpixel((i,0)))
+b += 1
+
+
+
+#
+# bb = np.array([
+#     [[0,1,2,9], [3,4,5,9], [6,7,8,9]],
+#     [[10, 11, 12, 90], [13, 14, 15, 90], [16, 17, 18, 90]],
+#     [[100, 110, 120, 900], [130, 140, 150, 900], [160, 170, 180, 900]],
+# ])
+
+
+# with np.nditer(b[:,:,0]) as it:
+#     for i in it:
+#         print(i)
+#
+# for y in b:
+#     for x in y:
+#         print(x, end=" ")
+#     print()
+
+test = ImageLSB("kitty.png", "detect")
+p = {"save": True,  "detect_all_color": True}
+c= ("RED",)
+test.apply_strategy()
