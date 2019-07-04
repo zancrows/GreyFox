@@ -286,7 +286,7 @@ class ImageLSB():
         if  self.nbr_color_pixel == 4:
             colors["ALPHA"] = 3
         if custom:
-            colors = {c: _colors[c] for c in custom}
+            colors = {c: colors[c] for c in custom}
         return  colors
 
     def apply_strategy(self, coor:dict={}, color_seq:tuple=None, params_strategy:dict={}) -> None:
