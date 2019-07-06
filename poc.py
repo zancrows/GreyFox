@@ -14,25 +14,26 @@ from greyfox import ImageLSB
     - TODO utiliser np.binary_repr
 """
 
-# print(bits)
-# img = Image.open("kitty.png")
+def str_to_bin(string:str) -> str:
+    if string:
+        return np.binary_repr(int(string.encode("utf8").hex(), 16), width=8)
+    return ""
 
 # Image.new("RGB", (10, 10), (0, 0, 0)).save("test.png")
-# img = ImageLSB("test.png", "embeded")
-# p = {"data_to_embeded": "b", "verbose": False}
-# img.apply_strategy(params_strategy=p)
-
 img = Image.open("test.png")
-# himg = Image.open("hidden_test.png")
+m_img = np.array(img)
 
-n = np.array(img)
+def m_print(a):
+    for x in a:
+        for y in x:
+            print(y, end=" ")
+        print()
 
-def myfunc(a, decal):
-    if (a << decal) & 128:
-        return 255
-    return 0
+bits = list(str_to_bin("u"))
+print(bits)
 
-vfunc = np.vectorize(myfunc)
+# m_print(m_img)
+
 
 b = np.array([
     [[0,1,2], [3,4,5], [6,7,8]],
@@ -40,11 +41,16 @@ b = np.array([
     [[100, 110, 120], [130, 140, 150], [160, 170, 180]],
 ])
 
-b += 1
+# x = np.array([[ 0,  1,  2], [ 3,  4,  5], [ 6,  7,  8], [ 9, 10, 11]])
+# print(x[[0,1,2]])
+
+colors = [0,1,2]
 
 
 
-#
+
+m_print(m_img)
+
 # bb = np.array([
 #     [[0,1,2,9], [3,4,5,9], [6,7,8,9]],
 #     [[10, 11, 12, 90], [13, 14, 15, 90], [16, 17, 18, 90]],
@@ -52,16 +58,6 @@ b += 1
 # ])
 
 
-# with np.nditer(b[:,:,0]) as it:
-#     for i in it:
-#         print(i)
-#
-# for y in b:
-#     for x in y:
-#         print(x, end=" ")
-#     print()
-
-test = ImageLSB("kitty.png", "detect")
-p = {"save": True,  "detect_all_color": True}
-c= ("RED",)
-test.apply_strategy()
+# test = ImageLSB("kitty.png", "detect")
+# p = {"show": 1,  "detect_all_color": True, "save": True}
+# test.apply_strategy(params_strategy=p)

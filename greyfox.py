@@ -39,8 +39,7 @@ def iter_by_blockN(iterable, len_bloc=8, format=tuple):
 
 def str_to_bin(string:str) -> str:
     if string:
-        bits = bin(int(binascii.hexlify(bytes(string, "utf8")), 16))[2:]
-        return bits.zfill(8 * ((len(bits) + 7) // 8))
+        return np.binary_repr(int(string.encode("utf8").hex(), 16), width=8)
     return ""
 
 def bin_to_str(sbin:str) -> bytes:
@@ -179,31 +178,30 @@ class DetectStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         all_color = params_strategy.get("detect_all_color", False)
         nbr_color = len(colors)
-        width = len(absi)
-        height = len(ordo)
-        show = params_strategy.get("show", True)
-        save = params_strategy.get("save", False)
+        width, height = len(absi), len(ordo)
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"detect_{file_name_}"
-        decal_color = lambda x, d: 255 if ((x << d) & 128) else 0
-        vfunc = np.vectorize(decal_color)
+        vfunc_detect = np.vectorize(lambda x, d: 255 if ((x << d) & 128) else 0)
         array_img = np.array(self.image)
 
-        # TODO a revoir ici
+
+
         if all_color:
             self.logger.send(("info", f"All color -> Yes"))
             new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
-            mode, c = "RGB", 0
+            mode, c = "RGB", (0, 0, 0)
         else:
             self.logger.send(("info", f"All color -> No"))
             new_size = (width*7+6, height * nbr_color + (nbr_color-1))
-        img_detect = Image.new("RGB", new_size, (0, 0, 0))
+            mode, c= "L", 0
+        img_detect = Image.new(mode, new_size, c)
 
         start = datetime.now()
         for i, j in enumerate(range(0, new_size[0], self.width), 1):
             for k, v_color in enumerate(colors.values()):
                 dimension = (i+j, self.height*k+k)
-                m_img = vfunc(array_img[:, :, v_color], i)
+                # TODO appliquer avec les dimensions
+                m_img = vfunc_detect(array_img[:, :, v_color], i)
                 new_img = Image.fromarray(m_img)
                 img_detect.paste(new_img, dimension)
             if all_color:
@@ -213,9 +211,9 @@ class DetectStrategyLSB(StrategyLSB):
         end = datetime.now()
         self.logger.send(("info", f"Detect traitement time -> {end - start}"))
 
-        if show:
+        if params_strategy.get("show", True):
             img_detect.show()
-        if save:
+        if params_strategy.get("save", False):
             start_save = datetime.now()
             img_detect.save(file_name)
             end_save = datetime.now()
