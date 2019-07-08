@@ -39,17 +39,14 @@ def iter_by_blockN(iterable, len_bloc=8, format=tuple):
 
 def str_to_bin(string:str) -> str:
     if string:
-        return np.binary_repr(int(string.encode("utf8").hex(), 16), width=8)
+        bits = np.binary_repr(int(string.encode("utf8").hex(), 16))
+        return bits.zfill(8 * ((len(bits) + 7) // 8))
     return ""
 
 def bin_to_str(sbin:str) -> bytes:
-    b_str = b""
-    for i in iter_by_blockN(sbin):
-        binary = "".join(i)
-        integer = int(binary, 2)
-        hexa = f"{integer:02x}"
-        b_str += binascii.unhexlify(hexa)
-    return b_str
+    hexa = np.base_repr(int(sbin, 2), base=16)
+    return binascii.unhexlify(hexa)
+
 
 ############################## class ###########################################
 
@@ -184,8 +181,6 @@ class DetectStrategyLSB(StrategyLSB):
         vfunc_detect = np.vectorize(lambda x, d: 255 if ((x << d) & 128) else 0)
         array_img = np.array(self.image)
 
-
-
         if all_color:
             self.logger.send(("info", f"All color -> Yes"))
             new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
@@ -193,7 +188,7 @@ class DetectStrategyLSB(StrategyLSB):
         else:
             self.logger.send(("info", f"All color -> No"))
             new_size = (width*7+6, height * nbr_color + (nbr_color-1))
-            mode, c= "L", 0
+            mode, c= "L", 255
         img_detect = Image.new(mode, new_size, c)
 
         start = datetime.now()
@@ -207,6 +202,7 @@ class DetectStrategyLSB(StrategyLSB):
             if all_color:
                 dimension = (i+j, dimension[1] + self.height + (k+1))
                 new_img = Image.fromarray((array_img << i) & 128)
+
                 img_detect.paste(new_img, dimension)
         end = datetime.now()
         self.logger.send(("info", f"Detect traitement time -> {end - start}"))
@@ -227,7 +223,9 @@ class ImageLSB():
         self.strategy_lsb = strategy_lsb
         # /!\ attention 'filename' indique le chemin  absolu de l'image /!\
         self.file_name = self.image.filename
+        print(self.image.getpixel((0,0)))
         self.nbr_color_pixel = len(self.image.getpixel((0,0))) #Ugly :(
+
 
     @property
     def image(self) -> Image.Image:
