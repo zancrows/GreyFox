@@ -22,8 +22,11 @@ def m_print(a, absi=None, ordo=None):
         print()
 
 
-img = Image.new("RGB", (5, 10), (0, 0, 0)).save("test.png")
+# Image.new("RGB", (5, 10), (0, 0, 0)).save("test.png")
 # m_img = np.array(Image.open("test.png"))
+img = Image.open("avion.png")
+
+
 
 # m_img = np.array([
 #     [[0, 0], [0, 1], [0, 2], [0,3], [0,4]],
@@ -32,23 +35,18 @@ img = Image.new("RGB", (5, 10), (0, 0, 0)).save("test.png")
 #     [[3, 0], [3, 1], [3, 2], [3,3], [3,4]],
 #     [[4, 0], [4, 1], [4, 2], [4,3], [4,4]]
 # ])
+m_img = np.array([
+    [1,2,3,4,5,6,7,8,9,0],
+    [1,2,3,4,5,6,7,8,9,0],
+    [1,2,3,4,5,6,7,8,9,0],
+    [1,2,3,4,5,6,7,8,9,0],
+    [1,2,3,4,5,6,7,8,9,0]
+])
 
-print(str_to_bin("cou"))
+m_img = m_img.reshape(len(m_img), len(m_img[0]), 1)
+img = ImageLSB("hidden_avion.png", "extract")
+p = {"data_to_embeded": "coucou"}
+img.apply_strategy(params_strategy=p)
 
-img  = ImageLSB("test.png", "embeded")
-c = {"x": (0,500), "y": (0,450)}
-p = {"data_to_embeded": "couc"}
-img.apply_strategy(coor=c, params_strategy=p)
-
-m_img = np.array(Image.open("hidden_test.png"))
-
-img = ImageLSB("kitty.png", "detect")
-img.apply_strategy(coor=c)
-
-# print(len(m_img[0:6:2]))
-
-# x = slice(0,1)
-# for i in m_img:
-#     for j in i[x]:
-#         j[...] =1
-m_print(m_img[0:9])
+# m_img = np.array(Image.open("hidden_test.png"))
+# m_print(m_img)

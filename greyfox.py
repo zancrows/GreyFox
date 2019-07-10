@@ -72,7 +72,10 @@ class EmbededStrategyLSB(StrategyLSB):
         self.logger.send(("info", f"Mask -> {repr_mask}"))
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"hidden_{file_name_}"
-        array_img = np.array(self.image)
+        width, height = len(self.array_image[0, absi]), len(self.array_image[ordo])
+
+        if self.mode == "L" or self.mode == "P":
+            self.array_image.shape = (height, width, 1)
 
         if not data_to_embeded:
             err_msg = "data_to_embeded is empty"
@@ -83,7 +86,7 @@ class EmbededStrategyLSB(StrategyLSB):
         bits = list(str_to_bin(data_to_embeded))
         self.logger.send(("info", f"Data to embeded -> {data_to_embeded}"))
 
-        for _ordo in array_img[ordo]:
+        for _ordo in self.array_image[ordo]:
             for _absi in _ordo[absi]:
                 for k_color, v_color in colors.items():
                     for m in mask.get(k_color, (0,)):
@@ -93,18 +96,25 @@ class EmbededStrategyLSB(StrategyLSB):
 
         self.logger.send(("info", f"End embeded "))
         self.logger.send(("info", f"Save file with hidden data -> {file_name}"))
-        Image.fromarray(array_img).save(file_name)
+
+        if self.mode == "L" or self.mode == "P":
+            self.array_image.shape = (height, width,)
+
+        Image.fromarray(self.array_image, mode=self.mode).save(file_name)
 
 
 class ExtractStrategyLSB(StrategyLSB):
     def action(self, absi:slice, ordo:slice, colors:dict, params_strategy:dict) -> None:
-        extract = ""
         mask = params_strategy.get("mask", {})
         repr_mask = mask if mask else "Default mask -> (0,)"
         self.logger.send(("info", f"Mask -> {repr_mask}"))
-        array_img = np.array(self.image)
+        width, height = len(self.array_image[0, absi]), len(self.array_image[ordo])
 
-        for _ordo in array_img[ordo]:
+        if self.mode == "L" or self.mode == "P":
+            self.array_image.shape = (height, width, 1)
+
+        extract = ""
+        for _ordo in self.array_image[ordo]:
             for _absi in _ordo[absi]:
                 for k_color, v_color in colors.items():
                     for m in mask.get(k_color, (0,)):
@@ -125,29 +135,30 @@ class DetectStrategyLSB(StrategyLSB):
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"detect_{file_name_}"
         vfunc_detect = np.vectorize(lambda x, d: 255 if ((x << d) & 128) else 0)
-        array_img = np.array(self.image)
-        width, height = len(array_img[0, absi]), len(array_img[ordo])
+        width, height = len(self.array_image[0, absi]), len(self.array_image[ordo])
 
-        if all_color:
-            self.logger.send(("info", f"All color -> Yes"))
-            new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
-            mode, c = "RGB", (0, 0, 0)
+        if self.mode == "L" or self.mode == "P":
+            new_size = (width*7+6, height)
+            self.array_image.shape = (height, width, 1)
         else:
-            self.logger.send(("info", f"All color -> No"))
-            new_size = (width*7+6, height * nbr_color + (nbr_color-1))
-            mode, c = "L", 255
-        img_detect = Image.new(mode, new_size, c)
+            if all_color:
+                self.logger.send(("info", f"All color -> Yes"))
+                new_size = (width*7+6, height * (nbr_color+1) + nbr_color)
+            else:
+                self.logger.send(("info", f"All color -> No"))
+                new_size = (width*7+6, height * nbr_color + (nbr_color-1))
+        img_detect = Image.new(self.mode, new_size)
 
         start = datetime.now()
         for i, j in enumerate(range(0, new_size[0], width), 1):
             for k, v_color in enumerate(colors.values()):
                 dimension = (i+j, height*k+k)
-                m_img = vfunc_detect(array_img[:, :, v_color], i)
+                m_img = vfunc_detect(self.array_image[:, :, v_color], i)
                 new_img = Image.fromarray(m_img[ordo, absi])
                 img_detect.paste(new_img, dimension)
             if all_color:
                 dimension = (i+j, dimension[1] + height + (k+1))
-                new_img = Image.fromarray((array_img << i) & 128)
+                new_img = Image.fromarray((self.array_image << i) & 128)
 
                 img_detect.paste(new_img, dimension)
         end = datetime.now()
@@ -165,11 +176,12 @@ class DetectStrategyLSB(StrategyLSB):
 class ImageLSB():
     def __init__(self, image:Image, strategy_lsb:StrategyLSB=None):
         self.image = image
+        self.array_image = np.array(self.image)
         self.width, self.height = self.image.size
         self.strategy_lsb = strategy_lsb
         # /!\ attention 'filename' indique le chemin  absolu de l'image /!\
         self.file_name = self.image.filename
-        self.nbr_color_pixel = len(self.image.getpixel((0,0))) #Ugly :(
+        self.mode = "".join(self.image.getbands())
 
     @property
     def image(self) -> Image.Image:
@@ -196,14 +208,15 @@ class ImageLSB():
             "extract": ExtractStrategyLSB,
             "embeded": EmbededStrategyLSB
         }
-
         self._strategy_lsb = strategy.get(strategy_lsb, strategy_lsb)
 
     def color_sequence(self, custom:tuple=None) -> dict:
         colors = {"RED": 0 , "GREEN": 1, "BLUE": 2}
 
-        if  self.nbr_color_pixel == 4:
+        if  self.mode == "RGBA":
             colors["ALPHA"] = 3
+        elif self.mode == "L" or self.mode == "P":
+            colors = {"GREY": 0}
         if custom:
             colors = {c: colors[c] for c in custom}
         return  colors
