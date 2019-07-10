@@ -78,7 +78,7 @@ les différentes valeurs possibles sont :
 * BLUE
 * ALPHA (quand l'image supporte)  
 
-Par défaut la séquence vaut RED GREEN BLUE et ALPHA quand il y a, ou BLACK quand l'image est noire et blanc.
+Par défaut la séquence vaut RED GREEN BLUE et ALPHA quand il y a, ou BLACK quand l'image est en noire et blanc.
 
 ### params_strategy:  
 
