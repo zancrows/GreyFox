@@ -44,90 +44,35 @@ def str_to_bin(string:str) -> str:
     return ""
 
 def bin_to_str(sbin:str) -> bytes:
-    hexa = np.base_repr(int(sbin, 2), base=16)
-    return binascii.unhexlify(hexa)
+    b_str = b""
+    for b in iter_by_blockN(sbin):
+        hexa = np.base_repr(int("".join(b), 2), base=16)
+        b_str += binascii.unhexlify(f"{hexa:>02}")
+    return b_str
 
+def bit_editor(ibyte:int, bit:int, mask:int) -> int:
+        return (((ibyte >> (mask+1) << 1) | bit) << mask) | (ibyte & ((1 << mask) - 1))
+
+def extract_bit(ibyte:int, mask:int) -> str:
+        return str((ibyte >> mask) & 1)
 
 ############################## class ###########################################
-
-class PixelLSB:
-    def __init__(self, coor:tuple, color:tuple):
-        self.coor = coor
-        self.color = color
-        self._select_color = None
-
-    @property
-    def color(self) -> tuple:
-        return tuple(self._color)
-
-    @color.setter
-    def color(self, color:tuple) -> None:
-        self._color = list(color)
-
-    def __lshift__(self, other:int):
-        if self._select_color is not None:
-            self._color[self._select_color] <<= other
-            self.color = self._color
-        else:
-            self.color = [c << other for c in self.color]
-        return self
-
-    def __rshift__(self, other:int):
-        if self._select_color is not None:
-            self._color[self._select_color] >>= other
-            self.color = self._color
-        else:
-            self.color = [c >> other for c in self.color]
-        return self
-
-    def __or__(self, other:int):
-        if self._select_color is not None:
-            self._color[self._select_color] |= other
-        else:
-            self.color = [c | other for c in self.color]
-        return self
-
-    def __and__(self, other:int):
-        if self._select_color is not None:
-            self._color[self._select_color] &= other
-        else:
-            self.color = [c & other for c in self.color]
-        return self
-
-    def __getitem__(self, idx:int):
-        self._select_color = idx
-        return self
-
-    def __repr__(self):
-        return f"{self.coor}, {self.color}"
-
-    def extract_bit(self, mask:tuple=(0,)) -> str:
-        if self._select_color is not None:
-            bit = ""
-            for i in mask:
-                bit += str((self.color[self._select_color] >> i) & 1)
-            return bit
-        else:
-            raise IndexError("Index is needed for use this method")
-
 
 class StrategyLSB(metaclass=ABCMeta):
     @abstractmethod
     def action(self, absi, ordo, colors):
         raise NotImplementedError
 
-    @classmethod
-    def get_pixel(cls, img:Image, absi:int, ordo:int):
-        for y in ordo:
-            for x in absi:
-                yield PixelLSB((x, y), img.getpixel((x, y)))
-
 
 class EmbededStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         data_to_embeded = params_strategy.get("data_to_embeded")
+        mask = params_strategy.get("bit_mask", {})
+        repr_mask = mask if mask else "Default mask -> (0,)"
+        self.logger.send(("info", f"Mask -> {repr_mask}"))
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"hidden_{file_name_}"
+        array_img = np.array(self.image)
 
         if not data_to_embeded:
             err_msg = "data_to_embeded is empty"
@@ -138,18 +83,18 @@ class EmbededStrategyLSB(StrategyLSB):
         bits = list(str_to_bin(data_to_embeded))
         self.logger.send(("info", f"Data to embeded -> {data_to_embeded}"))
 
-        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            for k_color, v_color in colors.items():
-                if bits:
-                    ((pixel[v_color] >> 1) << 1) | int(bits[0])
-                    bits.pop(0)
-            self.image.putpixel(pixel.coor, pixel.color)
-            if not bits:
-                self.logger.send(("info", f"End embeded here {pixel.coor}"))
-                break
+        # TODO prendre en compte la taille
+        for ordo in array_img[:]:
+            for absi in ordo[:]:
+                for k_color, v_color in colors.items():
+                    for m in mask.get(k_color, (0,)):
+                        if bits:
+                            absi[v_color] = bit_editor(absi[v_color], int(bits[0]), m)
+                            bits.pop(0)
 
+        self.logger.send(("info", f"End embeded "))
         self.logger.send(("info", f"Save file with hidden data -> {file_name}"))
-        self.image.save(file_name)
+        Image.fromarray(array_img).save(file_name)
 
 
 class ExtractStrategyLSB(StrategyLSB):
@@ -158,10 +103,13 @@ class ExtractStrategyLSB(StrategyLSB):
         mask = params_strategy.get("bit_mask", {})
         repr_mask = mask if mask else "Default mask -> (0,)"
         self.logger.send(("info", f"Mask -> {repr_mask}"))
+        array_img = np.array(self.image)
 
-        for pixel in StrategyLSB.get_pixel(self.image, absi, ordo):
-            for k_color, v_color in colors.items():
-                extract += pixel[v_color].extract_bit(mask.get(k_color, (0,)))
+        for ordo in array_img[:]:
+            for absi in ordo[:]:
+                for k_color, v_color in colors.items():
+                    for m in mask.get(k_color, (0,)):
+                        extract += extract_bit(absi[v_color], m)
 
         with open("binary.txt", mode="w") as fp:
             self.logger.send(("info", "File binary.txt write"))
@@ -188,7 +136,7 @@ class DetectStrategyLSB(StrategyLSB):
         else:
             self.logger.send(("info", f"All color -> No"))
             new_size = (width*7+6, height * nbr_color + (nbr_color-1))
-            mode, c= "L", 255
+            mode, c = "L", 255
         img_detect = Image.new(mode, new_size, c)
 
         start = datetime.now()
