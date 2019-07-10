@@ -65,9 +65,9 @@ class StrategyLSB(metaclass=ABCMeta):
 
 
 class EmbededStrategyLSB(StrategyLSB):
-    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
+    def action(self, absi:slice, ordo:slice, colors:dict, params_strategy:dict) -> None:
         data_to_embeded = params_strategy.get("data_to_embeded")
-        mask = params_strategy.get("bit_mask", {})
+        mask = params_strategy.get("mask", {})
         repr_mask = mask if mask else "Default mask -> (0,)"
         self.logger.send(("info", f"Mask -> {repr_mask}"))
         file_name_ = params_strategy.get('file_name', self.file_name)
@@ -83,13 +83,12 @@ class EmbededStrategyLSB(StrategyLSB):
         bits = list(str_to_bin(data_to_embeded))
         self.logger.send(("info", f"Data to embeded -> {data_to_embeded}"))
 
-        # TODO prendre en compte la taille
-        for ordo in array_img[:]:
-            for absi in ordo[:]:
+        for _ordo in array_img[ordo]:
+            for _absi in _ordo[absi]:
                 for k_color, v_color in colors.items():
                     for m in mask.get(k_color, (0,)):
                         if bits:
-                            absi[v_color] = bit_editor(absi[v_color], int(bits[0]), m)
+                            _absi[v_color] = bit_editor(_absi[v_color], int(bits[0]), m)
                             bits.pop(0)
 
         self.logger.send(("info", f"End embeded "))
@@ -98,18 +97,18 @@ class EmbededStrategyLSB(StrategyLSB):
 
 
 class ExtractStrategyLSB(StrategyLSB):
-    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
+    def action(self, absi:slice, ordo:slice, colors:dict, params_strategy:dict) -> None:
         extract = ""
-        mask = params_strategy.get("bit_mask", {})
+        mask = params_strategy.get("mask", {})
         repr_mask = mask if mask else "Default mask -> (0,)"
         self.logger.send(("info", f"Mask -> {repr_mask}"))
         array_img = np.array(self.image)
 
-        for ordo in array_img[:]:
-            for absi in ordo[:]:
+        for _ordo in array_img[ordo]:
+            for _absi in _ordo[absi]:
                 for k_color, v_color in colors.items():
                     for m in mask.get(k_color, (0,)):
-                        extract += extract_bit(absi[v_color], m)
+                        extract += extract_bit(_absi[v_color], m)
 
         with open("binary.txt", mode="w") as fp:
             self.logger.send(("info", "File binary.txt write"))
@@ -120,14 +119,14 @@ class ExtractStrategyLSB(StrategyLSB):
 
 
 class DetectStrategyLSB(StrategyLSB):
-    def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
+    def action(self, absi:slice, ordo:slice, colors:dict, params_strategy:dict) -> None:
         all_color = params_strategy.get("detect_all_color", False)
         nbr_color = len(colors)
-        width, height = len(absi), len(ordo)
         file_name_ = params_strategy.get('file_name', self.file_name)
         file_name = f"detect_{file_name_}"
         vfunc_detect = np.vectorize(lambda x, d: 255 if ((x << d) & 128) else 0)
         array_img = np.array(self.image)
+        width, height = len(array_img[0, absi]), len(array_img[ordo])
 
         if all_color:
             self.logger.send(("info", f"All color -> Yes"))
@@ -140,15 +139,14 @@ class DetectStrategyLSB(StrategyLSB):
         img_detect = Image.new(mode, new_size, c)
 
         start = datetime.now()
-        for i, j in enumerate(range(0, new_size[0], self.width), 1):
+        for i, j in enumerate(range(0, new_size[0], width), 1):
             for k, v_color in enumerate(colors.values()):
-                dimension = (i+j, self.height*k+k)
-                # TODO appliquer avec les dimensions
+                dimension = (i+j, height*k+k)
                 m_img = vfunc_detect(array_img[:, :, v_color], i)
-                new_img = Image.fromarray(m_img)
+                new_img = Image.fromarray(m_img[ordo, absi])
                 img_detect.paste(new_img, dimension)
             if all_color:
-                dimension = (i+j, dimension[1] + self.height + (k+1))
+                dimension = (i+j, dimension[1] + height + (k+1))
                 new_img = Image.fromarray((array_img << i) & 128)
 
                 img_detect.paste(new_img, dimension)
@@ -171,9 +169,7 @@ class ImageLSB():
         self.strategy_lsb = strategy_lsb
         # /!\ attention 'filename' indique le chemin  absolu de l'image /!\
         self.file_name = self.image.filename
-        print(self.image.getpixel((0,0)))
         self.nbr_color_pixel = len(self.image.getpixel((0,0))) #Ugly :(
-
 
     @property
     def image(self) -> Image.Image:
@@ -213,8 +209,8 @@ class ImageLSB():
         return  colors
 
     def apply_strategy(self, coor:dict={}, color_seq:tuple=None, params_strategy:dict={}) -> None:
-        absi = range(*coor["x"]) if coor.get("x") else range(self.width)
-        ordo = range(*coor["y"]) if coor.get("y") else range(self.height)
+        absi = slice(*coor["x"]) if coor.get("x") else slice(None)
+        ordo = slice(*coor["y"]) if coor.get("y") else slice(None)
         colors = self.color_sequence(color_seq)
         repr_colors = " ".join(colors.keys())
         self.logger = logger(params_strategy.get("verbose", True))

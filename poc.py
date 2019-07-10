@@ -1,54 +1,54 @@
 #!/usr/bin/python3
 # coding: utf-8
 
-import binascii
 import numpy as np
 from PIL import Image, ImageColor
-from greyfox import ImageLSB
-from itertools import chain, islice
+from greyfox import ImageLSB, str_to_bin
 
 """
     NumPy:
-    - tester pour traiter sur des ranges -> slice
-    - applications par couleurs avec mask
-    - récupération de données
+    - optimiser les utilsiations des arrays:
+        - Embeded
+        - Extract
+        - Detect
+    - Multi process
+    - Vérifier quand il y a qu'une couleur
 """
 
-def str_to_bin(string:str) -> str:
-    if string:
-        bits = np.binary_repr(int(string.encode("utf8").hex(), 16))
-        return bits.zfill(8 * ((len(bits) + 7) // 8))
-    return ""
-
-img = Image.new("RGB", (100, 100), (0, 0, 0)).save("test.png")
-img = Image.open("test.png")
-m_img = np.array(img)
-
-
-def m_print(a):
+def m_print(a, absi=None, ordo=None):
     for y in a:
         for x in y:
             print(f"{x}", end=" ")
         print()
 
+
+img = Image.new("RGB", (5, 10), (0, 0, 0)).save("test.png")
+# m_img = np.array(Image.open("test.png"))
+
 # m_img = np.array([
-#     [[1, 11, 111], [2, 22, 222], [3, 33, 333]],
-#     [[4, 44, 444], [5, 55, 555], [6, 66, 666]],
-#     [[7, 77, 777], [8, 88, 888], [9, 99, 999]]
+#     [[0, 0], [0, 1], [0, 2], [0,3], [0,4]],
+#     [[1, 0], [1, 1], [1, 2], [1,3], [1,4]],
+#     [[2, 0], [2, 1], [2, 2], [2,3], [2,4]],
+#     [[3, 0], [3, 1], [3, 2], [3,3], [3,4]],
+#     [[4, 0], [4, 1], [4, 2], [4,3], [4,4]]
 # ])
 
-
-
-
-
+print(str_to_bin("cou"))
 
 img  = ImageLSB("test.png", "embeded")
-p = {"data_to_embeded": "aurevoir"}
-c = ("RED",)
-img.apply_strategy(color_seq=c ,params_strategy=p)
-# p = {"detect_all_color": True, "save": True}
-# color = ("RED","BLUE")
-# img.apply_strategy(color_seq=color)
-# coor
-img  = ImageLSB("hidden_test.png", "extract")
-img.apply_strategy(color_seq=c)
+c = {"x": (0,500), "y": (0,450)}
+p = {"data_to_embeded": "couc"}
+img.apply_strategy(coor=c, params_strategy=p)
+
+m_img = np.array(Image.open("hidden_test.png"))
+
+img = ImageLSB("kitty.png", "detect")
+img.apply_strategy(coor=c)
+
+# print(len(m_img[0:6:2]))
+
+# x = slice(0,1)
+# for i in m_img:
+#     for j in i[x]:
+#         j[...] =1
+m_print(m_img[0:9])
