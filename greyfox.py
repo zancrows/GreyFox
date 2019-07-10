@@ -176,7 +176,7 @@ class EmbededStrategyLSB(StrategyLSB):
 class ExtractStrategyLSB(StrategyLSB):
     def action(self, absi:range, ordo:range, colors:dict, params_strategy:dict) -> None:
         extract = ""
-        mask = params_strategy.get("bit_mask", {})
+        mask = params_strategy.get("mask", {})
         repr_mask = mask if mask else "Default mask -> (0,)"
         self.logger.send(("info", f"Mask -> {repr_mask}"))
 
