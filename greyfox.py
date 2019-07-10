@@ -112,7 +112,7 @@ class EmbededStrategyLSB(StrategyLSB):
         self.logger.send(("info", f"Save file with hidden data -> {file_name}"))
 
         if self.mode == "L" or self.mode == "P":
-            self.array_image.shape = (height, width,)
+            self.array_image.shape = (height, width)
 
         Image.fromarray(self.array_image, mode=self.mode).save(file_name)
 
