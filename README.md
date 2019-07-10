@@ -6,6 +6,7 @@ Fonctionne avec python 3.7 et 3.6 (non testé)
 dépendances:
 * Pillow
 * colorama
+* NumPy
 
 ## Fonctionnement basique  
 
@@ -56,7 +57,7 @@ coor = {"x": (0, 20), "y": (0, 20)}
 img_lsb.apply_strategy(coor=coor)  
 ```
 
-les tuples vont être changés en ```range``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci:  
+les tuples vont être changés en ```slice``` donc il est possible de mettre une troisième valeur dedans qui va être le pas comme ceci:  
 ```python
 coor = {"x": (0, 20, 2), "y": (0, 20)}  
 ```  
@@ -77,7 +78,7 @@ les différentes valeurs possibles sont :
 * BLUE
 * ALPHA (quand l'image supporte)  
 
-Par défaut la séquence vaut RED GREEN BLUE et ALPHA quand il y a.  
+Par défaut la séquence vaut RED GREEN BLUE et ALPHA quand il y a, ou BLACK quand l'image est noire et blanc.
 
 ### params_strategy:  
 
@@ -143,7 +144,3 @@ class CustomStrategyLSB(StrategyLSB):
 img_lsb = ImageLSB("image.png", CustomStrategyLSB)
 img_lsb.apply_strategy()
 ```
-
-## Remarques
-La détection n'est pas très performante et peut prendre plusieurs minutes, 7 à 21min en fonction du pc pour une image 2000 par 1333 pixel.
-
